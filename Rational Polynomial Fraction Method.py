@@ -2,6 +2,7 @@ import os,pickle,zipfile
 import pandas as pd
 import numpy as np
 import itertools
+import matplotlib.pyplot as plt 
 
 #Import and process FRF data
 iters = [1]
@@ -14,6 +15,8 @@ sensor_frf_freq_lists = {}
 sensor_frf_mean = {}
 
 for iter_ in iters:
+    
+    
     
     for rep in reps: 
         test_rep = rep
@@ -82,14 +85,31 @@ for iter_ in iters:
         sensor_frf_mean[sensor] = frf_average
         sensor_frf_freq_mean[sensor] = frf_freq_average
 
-def RFPM_alg(FRF, Freq, N):
+def RFPM_alg(FRF, Freq, min_freq, max_freq, sensor, N):
     """This function computes the modal parameter of a system 
     using the Rational Fraction Polynomial Method"""
+    #FRF- Response Frequency as a dictionary with keys as sensor 
+    #name and values as list of FRF
+    #Frequency value as list 
+    #Sensor input must be a the string of the sensor name
     #N - degree of freedom
-    
     n = 2*N    #number of denominator polynomial terms
-    
+    #Convert frf and frequency to dataframe 
+
+    #Selecting Sensor
+    FRF = FRF.loc[:,sensor]
+    # Find corresponding indices of frequency range 
+    imin = Freq[Freq[0]== min_freq].index.values[0]
+    imax = Freq[Freq[0]== max_freq].index.values[0]
+    #converting dataframe to numpy array for ease
+    #Freq.to_numpy(), 
+    FRF.to_numpy()
+    #Frequency and FRF range
+    Freq = Freq[imin:imax]
+    FRF = FRF[imin:imax]
     #Generating individual Matrices
+    print(type(Freq))
+    print(type(FRF))
     P = []
     for i in Freq:
         new_row = []
@@ -116,80 +136,84 @@ def RFPM_alg(FRF, Freq, N):
     Z = np.real(np.dot(np.transpose(np.conjugate(T)),T))
     G = np.real(np.dot(np.transpose(np.conjugate(P)),W))
     F = -1*np.real(np.dot(np.transpose(np.conjugate(T)),W))
-    
     # Concatenation 
     top_half = np.concatenate((Y, X), axis = 1)
     but_half = np.concatenate((np.transpose(X), Z), axis = 1)
     matrix = np.concatenate((top_half, but_half), axis = 0)
-    
+    #comput inverse and find the right side vector
     vec = np.concatenate((G, F), axis = 0)
     coeff = np.dot(np.linalg.inv(matrix), vec)
-    
-    a = coeff[0:n]
-    b = coeff[n: 2*n]
+    #Split coefficient into A and B   
+    a = coeff[0:n], b = coeff[n: 2*n]
     #convert the dimension of a and b to vectors
-    a = list(itertools.chain.from_iterable(a))
+    a = list(itertools.chain.from_iterable(a)) 
     b = list(itertools.chain.from_iterable(b))
-    
     #Reverse the order of the list to suit the residue function
-    a.reverse()
-    b.reverse()
-    b = [1.0,*b]
-        
+    a.reverse(), b.reverse()
+    #insert the coefficient of the variable  of highest power
+    b = [1.0,*b]   
     # Solve the characteristics equation 
     poles = np.roots(b)
-       
     # Picking only poles with stable(negative) poles
-    poles = [p for p in poles if np.real(p) <= 0.0]
-    
+    poles = [pole for pole in poles if np.real(pole) < 0.0 and np.imag(pole) > 0.0]
     # Find the natural frequency and damping factor of the system
     nat_freq = np.abs(poles)
     #Computing the Damping Ratio
-    dam_ratio = -np.real(poles) / nat_freq
-    
+    #dam_ratio = -np.real(poles) / nat_freq
     #Remove frequencies more than the frequency spectrum under consideration
-    nat_freq = [i for i in nat_freq]
-    nat_freq = [x for x in nat_freq if x < max(Freq) and x >= min(Freq)]
+    #nat_freq = [i for i in nat_freq]
+    #nat_freq = [x for x in nat_freq if x < max(Freq) and x >= min(Freq)]
     
     #remove damping factors outside the 0-1 range
-    dam_ratio = [dr for dr in dam_ratio if dr < 1.0 and dr > 0.0]
-    return nat_freq, b, n
+    #dam_ratio = [dr for dr in dam_ratio if dr < 1.0 and dr > 0.0]
+    
+    return nat_freq, b, n, FRF, Freq
+
+def Stabilization_Dia(FRF, Freq, Order, sensor):
+    # Create figure and subplot
+    fig, host = plt.subplots(figsize=(15,10))   
+    plt.grid()  
+    par1 = host.twinx()
+    host.set_xlabel("Frequency[Hz]")
+    host.set_ylabel("FRF")
+    par1.set_ylabel("Model Order")
+    par1.set_yticks(order)
+    color1 = plt.cm.viridis(0)
+    host.semilogy(Freq, abs(FRF), color=color1, label="FRF")
+
+    for w_n, N in zip(nat_freqs,order):
+        N= [N for i in range(len(w_n))]
+        par1.plot(w_n, N,"+", markersize=5, label="Model Order")
+    plt.title(data_labels[sensor])
+    #plt.show()
+    return fig
+
+
+
 
 #Convert average frf for all sensor to dataframe
-data_frf_ = pd.DataFrame(sensor_frf_mean)   
-data_frf = data_frf_.to_numpy()
-freq__m = sensor_frf_freq_mean['EXH']
+#data_frf = pd.DataFrame(sensor_frf_mean).to_numpy()
+#data_frf = data_frf_.to_numpy()
 
-Freq = sensor_frf_freq_mean['EXH']
-sensor_no = 15
-frf = data_frf[:,sensor_no]
-Freq = Freq[0:1600]
-frf =  frf[0:1600]
+#Freq = pd.DataFrame(sensor_frf_freq_mean['EXH'])
+#min_freq = 0
+#max_freq = 10
+#Freq = Freq[Freq[0].between(min_freq,max_freq)]
+#sensor_no = 15
+#frf = data_frf[:,sensor_no]
+#Freq = Freq[0:1600]
+#frf =  frf[0:1600]
+sensor = 'EXH'
 N = [i for i in range(1,41)]
 nat_freqs =[]
 order = []
 for i in N:
-    nat_freq_, b, order_ = RFPM_alg(frf, Freq, i)
+    nat_freq_, b, order_, FRF, Freq = RFPM_alg(sensor_frf_mean, sensor_frf_freq_mean['EXH'], 0.0, 20, sensor, i)
     nat_freqs.append(nat_freq_)
     order.append(order_)
-    
-frf_ = [abs(i) for i in frf]
 
-import matplotlib.pyplot as plt 
+plot = Stabilization_Dia(FRF, Freq, order, sensor)
 
-# Create figure and subplot
-fig, host = plt.subplots(figsize=(15,10))   
-plt.grid()  
-par1 = host.twinx()
-host.set_xlabel("Frequency[Hz]")
-host.set_ylabel("FRF")
-par1.set_ylabel("Model Order")
-par1.set_yticks(order)
-color1 = plt.cm.viridis(0)
-host.semilogy(Freq, frf_, color=color1, label="FRF")
-
-for w_n, N in zip(nat_freqs,order):
-    N= [N for i in range(len(w_n))]
-    par1.plot(w_n, N,"+", markersize=5, label="Model Order")
-plt.title(data_labels[sensor_no])
 plt.show()
+
+
