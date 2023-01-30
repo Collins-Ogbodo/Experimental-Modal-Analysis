@@ -1,9 +1,4 @@
-
-iters = [1]
-reps = [1]
-test_series = "BR_AR"
-
-def Data_Preprocess(iters, reps, test_series):
+def Data_Prep(iters, reps, test_series):
     #Import and process FRF data
     import os,pickle,zipfile
     #empty list for individual sensor plot
