@@ -1,4 +1,4 @@
-def Data_Prep(iters, reps, test_series):
+def DataPrep(iters, reps, test_series):
     """This code preprocess the raw data and makes it ready for modal 
     analysis. The orginal files are in pickle they are extracted and 
     the final data are the dictionary of the frequency and frequency 
