@@ -13,9 +13,9 @@ def DataPrep(iters, reps, test_series):
     
     for iter_ in iters:
         for rep in reps: 
-            zip_file_path = "Test_Data/" + test_series + "/"+ test_series \
-                + "_" + str(iter_)+ '/' + test_series + "_" \
-                    + str(iter_) + "_" + str(rep) + '.zip'
+            zip_file_path = os.path.join("G:/", "My Drive", "DTHIVE", "Python Code","Test_Data", 
+                                     test_series, test_series + "_" + str(iter_),
+                                     test_series + "_" + str(iter_) + "_" + str(rep) + '.zip')
             #directory for dumping the extraction file
             ext_dump_dir = 'Extraction_Dump'
             if not os.path.exists(ext_dump_dir):
