@@ -1,4 +1,4 @@
-def RFPM(FRF, Freq, min_freq, max_freq, sensor, N):
+def RFPM_alg(FRF, Freq, min_freq, max_freq, sensor, N):
     import numpy as np
     import itertools
     from scipy import signal
