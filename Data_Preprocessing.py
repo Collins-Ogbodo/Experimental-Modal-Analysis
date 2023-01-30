@@ -1,4 +1,9 @@
 def Data_Prep(iters, reps, test_series):
+    """This code preprocess the raw data and makes it ready for modal 
+    analysis. The orginal files are in pickle they are extracted and 
+    the final data are the dictionary of the frequency and frequency 
+    response. The dictionary keys are the sensors and the values are 
+    the corresponding data"""
     #Import and process FRF data
     import os,pickle,zipfile
     #empty list for individual sensor plot
