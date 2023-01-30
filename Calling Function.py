@@ -1,13 +1,8 @@
 from DataPreprocessing import DataPrep
-<<<<<<< Updated upstream
 from Rational_Polynomial_Fraction_Method import RFPM
 from StabilizationDiagram import StabDia
 
 #Data Preprocessing
-=======
-from Rational Polynomial Fraction Method import Data_Prep
-from Data_Preprocessing import Data_Prep
->>>>>>> Stashed changes
 iters = [1]
 reps = [1]
 test_series = "BR_AR"
