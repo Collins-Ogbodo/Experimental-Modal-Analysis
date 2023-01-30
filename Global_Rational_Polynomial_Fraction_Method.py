@@ -66,7 +66,6 @@ def GRFPM(FRF, Freq, min_freq, max_freq, N):
     b = [1.0,*b]   
     # Solve the characteristics equation 
     poles = np.roots(b)
-    print(poles)
     # Picking only poles with stable(negative) poles
     poles = [pole for pole in poles if np.real(pole) < 0.0 and np.imag(pole) > 0.0 
              and np.abs(pole) <= max_freq and np.abs(pole) >= min_freq ]
