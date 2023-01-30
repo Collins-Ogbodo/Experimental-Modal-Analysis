@@ -1,28 +1,26 @@
-import DataPreprocessing
+from DataPreprocessing import DataPrep
+from Rational_Polynomial_Fraction_Method import RFPM
+from StabilizationDiagram import StabDia
 
-
-
-from Data_Preprocessing import Data_Prep
-from Data_Preprocessing import Data_Prep
+#Data Preprocessing
 iters = [1]
 reps = [1]
 test_series = "BR_AR"
+frf, freq = DataPrep(iters, reps, test_series)
 
-FRF, Freq = Data_Prep(iters, reps, test_series)
-
-
-
-sensor = 'EXH'
-N = [i for i in range(2,10)]
+#Applying OMA 
+sensor_name = 'EXH'
+N = [i for i in range(2,6)]
 nat_freqs =[]
 damp_ratio =[]
 order = []
 frf_est = []
 for i in N:
-    nat_freq_, dp, order_, FRF, Freq, FRF_est_ = RFPM_alg(sensor_frf_mean, sensor_frf_freq_mean, 20, 50, sensor, i)
+    nat_freq_, dp, order_, FRF, Freq, FRF_est_ = RFPM(frf, freq, 30, 50, sensor_name, i)
     nat_freqs.append(nat_freq_)
     order.append(order_)
     damp_ratio.append(dp)
     frf_est.append(FRF_est_)
-    
-plot = Stabilization_Dia(FRF,frf_est, Freq, order, sensor)
+
+#Plot the stabilization Diagram    
+plot = StabDia(nat_freqs, FRF,frf_est, Freq, order, sensor_name)
