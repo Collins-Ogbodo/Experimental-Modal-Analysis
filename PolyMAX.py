@@ -1,13 +1,9 @@
 def PolyMAX(FRF, Freq, min_freq, max_freq, N):
     import numpy as np
-    import itertools
-    from scipy import signal
-    import pandas as pd
     """This function computes the modal parameter of a system 
-    using using the PolyMAX method FRF- Response Frequency as a  
-    dictionary with keys as sensor name and values as list of FRF
-    Frequency value as list Sensor input must be a the string of 
-    the sensor name"""
+    using using the PolyMAX method. The FRF input is a 3 dimensional matrix
+    of the output, input and corresponding frequency
+    Frequency value is a dictionary of a frequencies or output"""
     #N - degree of freedom
     #Because the frequency for all sensors is same whe just select the first.
     Freq = Freq['EXH']
@@ -24,7 +20,7 @@ def PolyMAX(FRF, Freq, min_freq, max_freq, N):
     dt = 1/(2*(f_N-f_0))
     #Define initial matrix for M
     M = np.zeros([N+1,N+1])
-    #Number ouput
+    #Number output
     l = len(FRF)
     #number input
     m = len(FRF[0])
@@ -38,8 +34,6 @@ def PolyMAX(FRF, Freq, min_freq, max_freq, N):
         W_k = 1/Freq[i] if Freq[i] != 0.0 else 0.0
         X_sensor = np.multiply(W_k,Omega)
         X.append(X_sensor)
-    #compute negative X
-    #X_neg = [[-1*x for x in innerlist] for innerlist in X]
     #compute M for all output
     for ls in range(l):
         #Repeat for number of input and compute the Y columns
@@ -68,43 +62,14 @@ def PolyMAX(FRF, Freq, min_freq, max_freq, N):
     CM = np.concatenate((CM, np.transpose(alpha)), axis = 0)
     poles, PF = np.linalg.eig(CM)
     poles = np.log(poles)/dt
-    stable poles
-    #poles = [pole for pole in poles if np.real(pole) < 0.0 and np.imag(pole) > 0.0]
-    #Compuring Natural Frequency
-    #w_n = [abs(pole) for pole in poles]
-    return M, alpha, CM, poles
-  
-#%%
-
-
-def PolyMaxDataPrep(frf):
-    """This function is pecific to the data sent available, it coverts the two dimensional 
-    space data (SIMO) which is a dictionary with keys equal to the sensor (output)
-    and vales equal to a list of each input across all frequencies to a three dimensional
-    matix space
-    e.g [[[FRF(w) for input 1 for ouput 1 ], [FRF(w) for input 2 for ouput 1 ], ...],
-         [[FRF(w) for input 1 for ouput 2 ], [FRF(w) for input 2 for ouput 2 ], ...]], ...]"""
-    FRF = []
-    for i in frf.values():
-        dump_dim = []
-        dump_dim.append(i)
-        FRF.append(dump_dim)
-    return FRF
-          
-#%%
-from DataPreprocessing import DataPrep
-#Data Preprocessing
-iters = [1]
-reps = [1]
-test_series = "BR_AR"
-frf, freq = DataPrep(iters, reps, test_series)
-
-fRF = PolyMaxDataPrep(frf)
-
-
-#%%
-
-M, alpha, cM, p = PolyMAX(fRF, freq, 47, 55, 20)
+    # Picking only poles with stable(negative) poles
+    poles = [pole for pole in poles if np.real(pole) < 0.0 and np.imag(pole) > 0.0 
+             and np.abs(pole) <= max_freq and np.abs(pole) >= min_freq ]
+    # Find the natural frequency and damping factor of the system
+    nat_freq = np.abs(poles)
+    #Computing the Damping Ratio
+    dam_ratio = -np.real(poles) / nat_freq 
+    return nat_freq, dam_ratio, N, FRF, Freq
 
 
 
