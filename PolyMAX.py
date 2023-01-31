@@ -38,36 +38,41 @@ def PolyMAX(FRF, Freq, min_freq, max_freq, N):
         W_k = 1/Freq[i] if Freq[i] != 0.0 else 0.0
         X_sensor = np.multiply(W_k,Omega)
         X.append(X_sensor)
+    #compute negative X
+    #X_neg = [[-1*x for x in innerlist] for innerlist in X]
     #compute M for all output
     for ls in range(l):
         #Repeat for number of input and compute the Y columns
-        H = np.zeros([Nf,m])
-        for ms in m:
+        Y = [] 
+        for ms in range(m):
             H_sensor = FRF[ls][ms]
             H_sensor = H_sensor[imin:imax]
-            H[:,ms] =+ H_sensor 
-        Y_sensor = np.kron(-X,H)
+            for x, h in zip(X,H_sensor):
+                X_neg = [-1*xs for xs in x]
+                Y_x = np.multiply(X_neg,h)
+                Y_x = list(Y_x)
+                Y.append(Y_x)
         R_sensor = np.real(np.dot(np.transpose(np.conjugate(X)), X))
-        T_sensor = np.real(np.dot(np.transpose(np.conjugate(Y_sensor)), Y_sensor))
-        S_sensor = np.real(np.dot(np.transpose(np.conjugate(X)), Y_sensor)) 
+        T_sensor = np.real(np.dot(np.transpose(np.conjugate(Y)), Y))
+        S_sensor = np.real(np.dot(np.transpose(np.conjugate(X)), Y)) 
         M_sensor = T_sensor - (np.transpose(np.conjugate(S_sensor)) @ np.linalg.inv(R_sensor) @ S_sensor)
         M =+ M_sensor
-    M = 2* M
-    #alpha = -1*np.linalg.inv(M[0:N*m,0:N*m]) @ M[0:N*m, N*m:len(M)]
-    #Im = np.identity(m)
-    #alpha = np.concatenate((alpha, Im), axis = 0)
-    #creatin the companion matrix
-    #CM = np.eye(len(M),k = 1)
+    M = 2*M
+    alpha = -1*np.linalg.inv(M[0:N*m,0:N*m]) @ M[0:N*m, N*m:len(M)]
+    Im = np.identity(m)
+    alpha = np.concatenate((alpha, Im), axis = 0)
+    #creating the companion matrix
+    CM = np.eye(len(M),k = 1)
     #remove the last row and join with alpha
-    #CM = CM[0:-1,:]
-    #CM = np.concatenate((CM, np.transpose(alpha)), axis = 0)
-    #poles, PF = np.linalg.eig(CM)
-    #poles = np.log(poles)/dt
-    #stable poles
+    CM = CM[0:-1,:]
+    CM = np.concatenate((CM, np.transpose(alpha)), axis = 0)
+    poles, PF = np.linalg.eig(CM)
+    poles = np.log(poles)/dt
+    stable poles
     #poles = [pole for pole in poles if np.real(pole) < 0.0 and np.imag(pole) > 0.0]
     #Compuring Natural Frequency
     #w_n = [abs(pole) for pole in poles]
-    return M
+    return M, alpha, CM, poles
   
 #%%
 
@@ -99,7 +104,7 @@ fRF = PolyMaxDataPrep(frf)
 
 #%%
 
-M = PolyMAX(fRF, freq, 47, 55, 20)
+M, alpha, cM, p = PolyMAX(fRF, freq, 47, 55, 20)
 
 
 
