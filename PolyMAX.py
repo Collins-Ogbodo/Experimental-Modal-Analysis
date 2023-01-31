@@ -97,24 +97,23 @@ def PolyMAX(frf, freq, N):
     #compute the sample time
     f_0 = min(freq); f_N = max(freq)
     dt = 1/(2*(f_N-f_0))
+    X_sensor = []
+    Y_sensor = []
+    for i in range(len_):
+        Omega = []
+        for j in range(0,N+1):
+            omega = np.exp(1j * freq[i] * dt * j)
+            Omega.append(omega)
+        W_k = 1/freq[i] if freq[i] != 0.0 else 0.0
+        X_ = np.multiply(W_k,Omega)
+        X_sensor.append(X_)
     
-    for sensor in range(sens_no):
-        X_sensor = []
-        Y_sensor = []
-        for i in range(len_):
-            Omega = []
-            for j in range(0,N+1):
-                omega = np.exp(1j * freq[i] * dt * j)
-                Omega.append(omega)
-            W_k = 1/freq[i] if freq[i] != 0.0 else 0.0
-            X_ = np.multiply(W_k,Omega)
-            X_sensor.append(X_)
-            Y_sensor.append(np.multiply(-X_,frf[i,sensor]))
-        R_sensor = np.real(np.dot(np.transpose(np.conjugate(X_sensor)), X_sensor))
-        T_sensor = np.real(np.dot(np.transpose(np.conjugate(Y_sensor)), Y_sensor))
-        S_sensor = np.real(np.dot(np.transpose(np.conjugate(X_sensor)), Y_sensor))
-        M_sensor = T_sensor - (np.transpose(np.conjugate(S_sensor)) @ np.linalg.inv(R_sensor) @ S_sensor)
-        M += M_sensor
+    Y_sensor.append(np.multiply(-X_,frf[i,sensor]))
+    R_sensor = np.real(np.dot(np.transpose(np.conjugate(X_sensor)), X_sensor))
+    T_sensor = np.real(np.dot(np.transpose(np.conjugate(Y_sensor)), Y_sensor))
+    S_sensor = np.real(np.dot(np.transpose(np.conjugate(X_sensor)), Y_sensor))
+    M_sensor = T_sensor - (np.transpose(np.conjugate(S_sensor)) @ np.linalg.inv(R_sensor) @ S_sensor)
+    M += M_sensor
     #M[:,-1] = 1.0
     alpha = -1*np.linalg.inv(M[0:-1,0:-1]) @ [M[k,-1] for k in range(N)]
     alpha = np.append(alpha, 1.0)
