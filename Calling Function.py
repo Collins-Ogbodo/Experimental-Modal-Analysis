@@ -35,11 +35,11 @@ nat_freqs_P =[]
 damp_ratio_P = []
 order_P = []
 
-#OMA for multiple order
+#OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
 for i in N:
     wn, dp, Order, FRF, Freq, FRF_est = RFPM(frf, freq, min_freq, max_freq, sensor_name, i)
     wn_G, dp_G, Order_G, FRF_G, _, FRF_est_G = GRFPM(frf, freq, min_freq, max_freq, i)
-    wn_P, dp_P, Order_P = PolyMAX(fRF, freq, min_freq, max_freq, i)
+    wn_P, dp_P, Order_P, _, _ = PolyMAX(fRF, freq, min_freq, max_freq, i)
     #Natural frequency
     nat_freqs.append(wn)
     nat_freqs_G.append(wn_G)  
@@ -59,6 +59,6 @@ for i in N:
 #Plot the stabilization Diagram    
 plot = StabDia(nat_freqs, FRF,frf_est, Freq, order, sensor_name, 'yes')
 plot = StabDia(nat_freqs_G, FRF_G,frf_est_G, Freq, Order_G, 'Global-RFPM', 'yes')
-plot = StabDia(nat_freqs, FRF,frf_est, Freq, order, 'PolyMAX', 'no')
+plot = StabDia(nat_freqs_P, FRF_G, _, Freq, order, 'PolyMAX', 'no')
 
 
