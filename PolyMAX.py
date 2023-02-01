@@ -46,11 +46,12 @@ def PolyMAX(FRF, Coh, Freq, min_freq, max_freq, N):
                 X_neg = [-1*xs for xs in x]
                 Y_x = np.multiply(X_neg,h)
                 Y_x = list(Y_x)
+                print(Y_x)
                 Y.append(Y_x)
         R_sensor = np.real(np.dot(np.transpose(np.conjugate(X)), X))
         T_sensor = np.real(np.dot(np.transpose(np.conjugate(Y)), Y))
         S_sensor = np.real(np.dot(np.transpose(np.conjugate(X)), Y)) 
-        M_sensor = T_sensor - (np.transpose(np.conjugate(S_sensor)) @ np.linalg.inv(R_sensor) @ S_sensor)
+        M_sensor = T_sensor - (np.transpose(S_sensor) @ np.linalg.inv(R_sensor) @ S_sensor)
         M =+ M_sensor
     M = 2*M
     alpha = -1*np.linalg.inv(M[0:N*m,0:N*m]) @ M[0:N*m, N*m:len(M)]
