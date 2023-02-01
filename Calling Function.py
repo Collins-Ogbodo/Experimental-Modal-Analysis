@@ -12,8 +12,8 @@ test_series = "BR_AR"
 frf, freq = DataPrep(iters, reps, test_series)
 
 #Applying OMA 
-N = [i for i in range(2,30)]
-min_freq = 20
+N = [i for i in range(2,3)]
+min_freq = 50
 max_freq = 60
 #%%
 #RFPM parameters
@@ -30,11 +30,11 @@ for i in N:
     #Damping Ratio
     damp_ratio.append(dp)
     #order from method
-    order.append(order)
+    order.append(Order)
     #Estimated FRF
     frf_est.append(FRF_est)
 #Plot the stabilization Diagram    
-plot = StabDia(nat_freqs, FRF,frf_est, Freq, order, sensor_name, 'yes')
+plot = StabDia(nat_freqs, FRF,frf_est, Freq, order, sensor_name)
 #%%
 #GRFPM parameters
 nat_freqs_G =[]
@@ -49,11 +49,11 @@ for i in N:
     #Damping Ratio
     damp_ratio_G.append(dp_G)
     #order from method
-    order_G.append(order_G)
+    order_G.append(Order_G)
     #Estimated FRF
     frf_est_G.append(FRF_est_G)
 #Plot the stabilization Diagram    
-plot = StabDia(nat_freqs_G, FRF_G,frf_est_G, Freq, Order_G, 'Global-RFPM', 'yes')
+plot = StabDia(nat_freqs_G, FRF_G,frf_est_G, Freq, order_G, 'Global-RFPM')
 #%%
 #Polymax
 fRF = PolyMaxDataPrep(frf)
@@ -67,7 +67,8 @@ for i in N:
     #Natural frequency
     nat_freqs_P.append(wn_P)  
     #Damping Ratio
+    damp_ratio_P.append(dp_P)
 #Plot the stabilization Diagram    
-plot = StabDia(nat_freqs_P, FRF_G, _, Freq, order, 'PolyMAX', 'no')
+plot = StabDia(nat_freqs_P, FRF_G, _, Freq, order_P, 'PolyMAX', 'no')
 
 
