@@ -28,7 +28,7 @@ def PolyMAX(FRF, Freq, min_freq, max_freq, N):
     for i in range(Nf):
         Omega = []
         for j in range(0,N+1):
-            omega = np.exp(1j * Freq[i] * dt * j)
+            omega = np.exp(-1j * Freq[i] * dt * j)
             Omega.append(omega)
         #print(Freq[i])
         W_k = 1/Freq[i] if Freq[i] != 0.0 else 0.0
@@ -61,7 +61,8 @@ def PolyMAX(FRF, Freq, min_freq, max_freq, N):
     CM = CM[0:-1,:]
     CM = np.concatenate((CM, np.transpose(alpha)), axis = 0)
     poles, PF = np.linalg.eig(CM)
-    poles = np.log(poles)/dt
+    poles = -1*np.log(poles)/dt
+    print(poles)
     # Picking only poles with stable(negative) poles
     poles = [pole for pole in poles if np.real(pole) < 0.0 and np.imag(pole) > 0.0 
              and np.abs(pole) <= max_freq and np.abs(pole) >= min_freq ]
