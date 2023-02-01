@@ -17,8 +17,6 @@ def GRFPM(FRF, Freq, min_freq, max_freq, N):
     FRF= FRF.mean(axis=1)
     #convert dataframe to numpy arrary for splitting ease.
     FRF.to_numpy()
-    #Because the frequency for all sensors is same whe just select the first.
-    Freq = Freq['EXH']
     # Find corresponding indices of frequency range
     imin = Freq.index(min_freq)
     imax = Freq.index(max_freq) 

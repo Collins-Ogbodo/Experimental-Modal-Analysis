@@ -12,7 +12,6 @@ def RFPM(FRF, Freq, min_freq, max_freq, sensor, N):
     n = 2*N  #number of denominator polynomial terms
     #Selecting Sensor
     FRF = FRF[sensor]
-    Freq = Freq[sensor]
     # Find corresponding indices of frequency range
     imin = Freq.index(min_freq)
     imax = Freq.index(max_freq) 
