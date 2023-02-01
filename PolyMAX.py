@@ -1,4 +1,4 @@
-def PolyMAX(FRF, Freq, min_freq, max_freq, N):
+def PolyMAX(FRF, Coh, Freq, min_freq, max_freq, N):
     import numpy as np
     """This function computes the modal parameter of a system 
     using using the PolyMAX method. The FRF input is a 3 dimensional matrix
@@ -6,7 +6,6 @@ def PolyMAX(FRF, Freq, min_freq, max_freq, N):
     Frequency value is a dictionary of a frequencies or output"""
     #N - degree of freedom
     #Because the frequency for all sensors is same whe just select the first.
-    Freq = Freq['EXH']
     # Find corresponding indices of frequency range
     imin = Freq.index(min_freq)
     imax = Freq.index(max_freq) 
@@ -24,21 +23,23 @@ def PolyMAX(FRF, Freq, min_freq, max_freq, N):
     l = len(FRF)
     #number input
     m = len(FRF[0])
-    X = []
-    for i in range(Nf):
-        Omega = []
-        for j in range(0,N+1):
-            omega = np.exp(-1j * Freq[i] * dt * j)
-            Omega.append(omega)
-        #print(Freq[i])
-        W_k = 1/Freq[i] if Freq[i] != 0.0 else 0.0
-        X_sensor = np.multiply(W_k,Omega)
-        X.append(X_sensor)
+    
     #compute M for all output
     for ls in range(l):
         #Repeat for number of input and compute the Y columns
         Y = [] 
         for ms in range(m):
+            X = []
+            for i in range(Nf):
+                Omega = []
+                for j in range(0,N+1):
+                    omega = np.exp(1j * Freq[i] * dt * j)
+                    Omega.append(omega)
+                #print(Freq[i])
+                #W_k = 1/Freq[i] if Freq[i] != 0.0 else 0.0
+                W_k = Coh[ls][ms][i]
+                X_sensor = np.multiply(W_k,Omega)
+                X.append(X_sensor)
             H_sensor = FRF[ls][ms]
             H_sensor = H_sensor[imin:imax]
             for x, h in zip(X,H_sensor):
@@ -61,8 +62,7 @@ def PolyMAX(FRF, Freq, min_freq, max_freq, N):
     CM = CM[0:-1,:]
     CM = np.concatenate((CM, np.transpose(alpha)), axis = 0)
     poles, PF = np.linalg.eig(CM)
-    poles = -1*np.log(poles)/dt
-    print(poles)
+    poles = np.log(poles)/dt
     # Picking only poles with stable(negative) poles
     poles = [pole for pole in poles if np.real(pole) < 0.0 and np.imag(pole) > 0.0 
              and np.abs(pole) <= max_freq and np.abs(pole) >= min_freq ]
