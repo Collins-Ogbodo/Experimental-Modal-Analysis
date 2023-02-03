@@ -12,9 +12,9 @@ test_series = "BR_AR"
 frf, freq, coh = DataPrep(iters, reps, test_series)
 
 #Applying OMA 
-N = [i for i in range(2,80)]
-min_freq = 21
-max_freq = 30
+N = [i for i in range(9,20)]
+min_freq = 39
+max_freq = 48
 #[5.0, 10.3, 13.5, 21.8, 25.52, 30.07, 39.0, 48.0, 55.0]
 #%%
 #RFPM parameters
@@ -23,6 +23,7 @@ nat_freqs =[]
 damp_ratio =[]
 order = []
 frf_est = []
+#N = [1]
 #OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
 for i in N:
     wn, dp, Order, FRF, Freq, FRF_est = RFPM(frf, freq, min_freq, max_freq, sensor_name, i)
@@ -42,7 +43,7 @@ nat_freqs_G =[]
 damp_ratio_G =[]
 order_G = []
 frf_est_G = []
-#N = [20]
+#N= [16]
 #OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
 for i in N:
     wn_G, dp_G, Order_G, fRF_G, _, FRF_est_G = GRFPM(frf, freq, min_freq, max_freq, i)
