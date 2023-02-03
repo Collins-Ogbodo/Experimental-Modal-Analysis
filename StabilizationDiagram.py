@@ -14,15 +14,15 @@ def StabDia(NatFreq, FRF, FRF_est, Freq, Order, sensor, recon = 'yes'):
     if recon == 'yes':
         for i, j in zip(FRF_est, Order):
             k = [abs(frf) for frf in i]
-            host.semilogy(Freq, k)
-        host.legend(Order, loc="upper left")
+            host.semilogy(Freq, k, label =j)
     elif recon == 'no':
         pass
     else:
         print('recon = yes/no')
+    host.legend(loc="upper left")
     for w_n, N in zip(NatFreq,Order):
         N= [N for i in range(len(w_n))]
-        par1.plot(w_n, N,"+", markersize=5, label='gaga')
+        par1.plot(w_n, N,"+", markersize=5)
     plt.title(sensor)
     plt.show()
     return fig
