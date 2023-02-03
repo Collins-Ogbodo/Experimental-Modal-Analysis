@@ -7,14 +7,15 @@ from StabilizationDiagram import StabDia
 
 #Data Preprocessing
 iters = [1]
-reps = [1]
+reps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 test_series = "BR_AR"
 frf, freq, coh = DataPrep(iters, reps, test_series)
 
 #Applying OMA 
-N = [i for i in range(2,50)]
-min_freq = 15
-max_freq = 20
+N = [i for i in range(2,80)]
+min_freq = 21
+max_freq = 30
+#[5.0, 10.3, 13.5, 21.8, 25.52, 30.07, 39.0, 48.0, 55.0]
 #%%
 #RFPM parameters
 sensor_name = 'EXH'
@@ -41,9 +42,10 @@ nat_freqs_G =[]
 damp_ratio_G =[]
 order_G = []
 frf_est_G = []
+#N = [20]
 #OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
 for i in N:
-    wn_G, dp_G, Order_G, FRF_G, _, FRF_est_G = GRFPM(frf, freq, min_freq, max_freq, i)
+    wn_G, dp_G, Order_G, fRF_G, _, FRF_est_G = GRFPM(frf, freq, min_freq, max_freq, i)
     #Natural frequency
     nat_freqs_G.append(wn_G)   
     #Damping Ratio
@@ -53,7 +55,8 @@ for i in N:
     #Estimated FRF
     frf_est_G.append(FRF_est_G)
 #Plot the stabilization Diagram    
-plot = StabDia(nat_freqs_G, FRF_G,frf_est_G, Freq, order_G, 'Global-RFPM')
+plot = StabDia(nat_freqs_G, fRF_G,frf_est_G, Freq, order_G, 'Global-RFPM')
+
 #%%
 #Polymax
 fRF = PolyMaxDataPrep(frf)
@@ -64,7 +67,7 @@ order_P = []
 
 #OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
 for i in N:
-    wn_P, dp_P, Order_P, _, _ = PolyMAX(fRF, freq, min_freq, max_freq, i)
+    wn_P, dp_P, Order_P, _, _ = PolyMAX(fRF,cOH, freq, min_freq, max_freq, i)
     #Natural frequency
     nat_freqs_P.append(wn_P)  
     #Damping Ratio
@@ -72,6 +75,26 @@ for i in N:
     #order from method
     order_P.append(Order_P)
 #Plot the stabilization Diagram    
-plot = StabDia(nat_freqs_P, FRF_G, _, Freq, order_P, 'PolyMAX', 'no')
+plot = StabDia(nat_freqs_P, fRF_G, _, Freq, order_P, 'PolyMAX', 'no')
 
+#%%
+
+def FreqSeg(FRF, Freq, seg):
+    import matplotlib.pyplot as plt 
+    # Create figure and subplot 
+    plt.figure(figsize=(17, 8))
+    plt.xlim(0,max(Freq))
+    plt.grid()  
+    plt.xlabel("Frequency[Hz]")
+    plt.ylabel("FRF")
+    FRF = [abs(frf) for frf in FRF]
+    plt.semilogy(Freq, FRF, label="FRF")
+    # multiple segments
+    plt.vlines(seg, ymin=0, ymax=max(FRF), colors='purple', ls='--', lw=2, label='EMA Segments')
+    #plt.axvspan(0.0, seg, alpha=0.5, color='orange')
+    plt.title('Modal Analysis Frequency Segment')
+    plt.show()
+    return
+#%%
+plot = FreqSeg(fRF_G, Freq, [5.0, 10.3, 13.5, 21.8, 25.52, 30.07, 39.0, 48.0, 55.0])
 
