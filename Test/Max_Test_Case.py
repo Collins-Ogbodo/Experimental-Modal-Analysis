@@ -38,17 +38,17 @@ Phi_true = Phi_true[:, sort_idx]
 Phi_true /= np.linalg.norm(Phi_true, axis=0)*-np.sign(Phi_true[0, :])
 
 # Get FRF
-ws = np.linspace(*w_range, n_w)
+ws = np.linspace(*w_range, n_w) #Natural frequency
 H = get_modal_transfer(Phi_true, wns_true**2, zetas_true*wns_true, ws)
-Ht = H
+Ht = H # True FRF before noise addition
 
 # Corrupt with noise
 RNG = np.random.default_rng(seed=RNG_seed)
 Hr = np.real(Ht)+(0.01*RMS_noise_percent*np.std(np.real(Ht))
-                  * RNG.normal(0, 1, size=Ht.shape))
+                  * RNG.normal(0, 1, size=Ht.shape)) # Real FRF
 Hi = np.imag(Ht)+(0.01*RMS_noise_percent*np.std(np.imag(Ht))
-                  * RNG.normal(0, 1, size=Ht.shape))
-H = Hr + 1j*Hi
+                  * RNG.normal(0, 1, size=Ht.shape)) # Imaginary FRF
+H = Hr + 1j*Hi # FRF with noise
 
 # save data
 np.save(f'{fname}.npy',  {'FRF':H, 'ws':ws, 'wns':wns_true, 'zs':zetas_true, 'Phi':Phi_true}, allow_pickle=1)  
