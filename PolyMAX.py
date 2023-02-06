@@ -37,7 +37,7 @@ def PolyMAX(FRF, Coh, Freq, min_freq, max_freq, N):
                     Omega.append(omega)
                 #print(Freq[i])
                 #W_k = 1/Freq[i] if Freq[i] != 0.0 else 0.0
-                W_k = Coh[ls][ms][i]
+                W_k = 1 #Coh[ls][ms][i]
                 X_sensor = np.multiply(W_k,Omega)
                 X.append(X_sensor)
             H_sensor = FRF[ls][ms]
@@ -46,7 +46,6 @@ def PolyMAX(FRF, Coh, Freq, min_freq, max_freq, N):
                 X_neg = [-1*xs for xs in x]
                 Y_x = np.multiply(X_neg,h)
                 Y_x = list(Y_x)
-                print(Y_x)
                 Y.append(Y_x)
         R_sensor = np.real(np.dot(np.transpose(np.conjugate(X)), X))
         T_sensor = np.real(np.dot(np.transpose(np.conjugate(Y)), Y))
