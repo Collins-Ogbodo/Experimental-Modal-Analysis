@@ -6,19 +6,24 @@ from PolyMaxData import PolyMaxDataPrep
 from StabilizationDiagram import StabDia
 
 #Data Preprocessing
-iters = [1]
-reps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-test_series = "BR_AR"
-frf, freq, coh = DataPrep(iters, reps, test_series)
-
+#iters = [1]
+#reps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+#test_series = "BR_AR"
+#frf, freq, coh = DataPrep(iters, reps, test_series)
+#%%
+frf = {}
+for i in range(5):
+    frf[i] = H[:,i]
+ #%%   
+freq = [i for i in ws]
 #Applying OMA 
 N = [i for i in range(9,20)]
-min_freq = 39
-max_freq = 48
+min_freq = 0.0
+max_freq = 7.007007007007007
 #[5.0, 10.3, 13.5, 21.8, 25.52, 30.07, 39.0, 48.0, 55.0]
 #%%
 #RFPM parameters
-sensor_name = 'EXH'
+sensor_name =2
 nat_freqs =[]
 damp_ratio =[]
 order = []
@@ -61,7 +66,7 @@ plot = StabDia(nat_freqs_G, fRF_G,frf_est_G, Freq, order_G, 'Global-RFPM')
 #%%
 #Polymax
 fRF = PolyMaxDataPrep(frf)
-cOH = PolyMaxDataPrep(coh)
+cOH = 1 #PolyMaxDataPrep(coh)
 nat_freqs_P =[]
 damp_ratio_P = []
 order_P = []
