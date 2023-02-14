@@ -36,8 +36,8 @@ def PolyMAX(FRF, Coh, Freq, min_freq, max_freq, N):
                     omega = np.exp(1j * Freq[i] * dt * j)
                     Omega.append(omega)
                 #print(Freq[i])
-                #W_k = 1/Freq[i] if Freq[i] != 0.0 else 0.0
-                W_k = 1 #Coh[ls][ms][i]
+                W_k = 1/Freq[i] if Freq[i] != 0.0 else 0.0
+                #W_k = 1 #Coh[ls][ms][i]
                 X_sensor = np.multiply(W_k,Omega)
                 X.append(X_sensor)
             H_sensor = FRF[ls][ms]
@@ -51,16 +51,18 @@ def PolyMAX(FRF, Coh, Freq, min_freq, max_freq, N):
         T_sensor = np.real(np.dot(np.transpose(np.conjugate(Y)), Y))
         S_sensor = np.real(np.dot(np.transpose(np.conjugate(X)), Y)) 
         M_sensor = T_sensor - (np.transpose(S_sensor) @ np.linalg.inv(R_sensor) @ S_sensor)
-        M =+ M_sensor
+        M += M_sensor
     M = 2*M
-    alpha = -1*np.linalg.inv(M[0:N*m,0:N*m]) @ M[0:N*m, N*m:len(M)]
+    A = M[0:N*m,0:N*m]
+    B = M[0:N*m, N*m:len(M)]
+    alpha,_,_,_ = np.linalg.lstsq(-A, np.reshape(B, (-1,1)), rcond=None)
     Im = np.identity(m)
     alpha = np.concatenate((alpha, Im), axis = 0)
     #creating the companion matrix
     CM = np.eye(len(M),k = 1)
     #remove the last row and join with alpha
     CM = CM[0:-1,:]
-    CM = np.concatenate((CM, np.transpose(alpha)), axis = 0)
+    CM = np.concatenate((CM, -np.transpose(alpha)), axis = 0)
     poles, PF = np.linalg.eig(CM)
     poles = np.log(poles)/dt
     # Picking only poles with stable(negative) poles
