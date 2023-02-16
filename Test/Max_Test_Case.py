@@ -61,3 +61,11 @@ axs[0].semilogy(data['ws'], np.abs(data['FRF']))
 axs[1].plot(data['ws'], np.angle(data['FRF']))
 [[ax.axvline(x, c='k', ls='--') for x in data['wns']] for ax in axs]
 plt.show()
+
+
+#%%
+import scipy.io
+ws = ws*2*np.pi
+# Save the array to a .mat file
+scipy.io.savemat('FRF.mat', {'H': H})
+scipy.io.savemat('Freq.mat', {'ws': np.transpose(ws)})
