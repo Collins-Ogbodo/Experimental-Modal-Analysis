@@ -1,6 +1,5 @@
 def PolyMAX(FRF, Freq, Coh, min_freq, max_freq, Nmin, Nmax):
     import numpy as np
-    import scipy.fft
     from scipy.linalg import toeplitz
     """This function computes the modal parameter of a system 
     using using the PolyMAX method. The FRF input is a 3 dimensional matrix
@@ -32,23 +31,16 @@ def PolyMAX(FRF, Freq, Coh, min_freq, max_freq, Nmin, Nmax):
     #W_k = 1#np.array([1/freq_val if freq_val != 0.0 else 0.0 for freq_val in Freq])
     #W_k = 100 #Coh[ms][i][ls]
     #computing X
-    X1 = scipy.fft.fft(FRF[1,:,:], Nf*2)
-    X2 =  scipy.fft.fft(np.conjugate(FRF[1,:,:]), Nf*2)
-    print(np.shape(X1))
-    print(Nf)
-    R_sensor = toeplitz(-np.real(X1[1:Nmax+1, Nf]), np.transpose(-np.real(X2[1:Nmax+1, Nf])))
-# =============================================================================
-#     for j in range(Nf):
-#         x = np.exp(1j * Freq[j] * dt * np.array([range(Nmax+1)])) * W_k#[j]
-#         X[j,:] = x 
-# =============================================================================
-    #R_sensor = np.real(np.matmul(np.transpose(X), X))
+    X = np.fft.fftn(np.ones((Nf,1)), s =(2*Nf,), axes=(0,))
+    R_sensor = toeplitz(np.real(X))
+    #Computation of the FFT of R=[Y'*Y]
+    T = np.fft.fftn(np.abs(FRF)^2, s =(2*Nf,), axes=(1, 2))
+    #Computing Y
+    Y = np.fft.fftn(FRF, s =(2*Nf,), axes=(1, 2))
     #compute M for all output
     for ls in range(l):
-        for i in range(Nf):
-            Y[i,:] = -X[i,:] * np.transpose(FRF[:,i,ls])
-        T_sensor = np.real(np.matmul(np.transpose(Y), Y))
-        S_sensor = np.real(np.matmul(np.transpose(X), Y)) 
+        T_sensor = toeplitz(np.real(T[:,:,ls]))
+        S_sensor = toeplitz(-np.real(np.conjugate(X)), -np.real(Y[:,:,ls])) 
         M_sensor = T_sensor - (np.transpose(S_sensor) @ np.linalg.inv(R_sensor) @ S_sensor)
         M = M + M_sensor 
     M = 2*M
