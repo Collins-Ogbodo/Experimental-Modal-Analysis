@@ -2,3 +2,8 @@ __pycache__/
 Extraction_Dump/
 Calling Function.py
 *.npy
+*.vsidx
+*.lock
+*.json
+.vs/Experimental-Modal-Analysis/v17/.wsuo
+*.sqlite
