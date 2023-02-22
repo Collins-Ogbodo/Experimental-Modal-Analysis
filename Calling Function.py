@@ -2,30 +2,24 @@ from DataPreprocessing import DataPrep
 from Rational_Polynomial_Fraction_Method import RFPM
 from Global_Rational_Polynomial_Fraction_Method import GRFPM
 from PolyMAX import PolyMAX
-from PolyMAXV1 import PolyMAXV1
 from PolyMaxData import PolyMaxDataPrep
 from StabilizationDiagram import StabDia
 
 
 #Data Preprocessing
-#iters = [1]
-#reps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-#test_series = "BR_AR"
-#frf, freq, coh = DataPrep(iters, reps, test_series)
-#%%
-frf = {}
-for i in range(5):
-    frf[i] = H[:,i]
- #%%   
-freq = [i for i in ws]
+iters = [1]
+reps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+test_series = "BR_AR"
+frf, freq, coh = DataPrep(iters, reps, test_series)
+
 #Applying OMA 
-N = [i for i in range(0,50)]
+N = [i for i in range(0,15)]
 min_freq = 0.0
-max_freq = 7.007007007007007
+max_freq = 10.0
 #[5.0, 10.3, 13.5, 21.8, 25.52, 30.07, 39.0, 48.0, 55.0]
 #%%
 #RFPM parameters
-sensor_name =0
+sensor_name = 'EXH'
 nat_freqs =[]
 damp_ratio =[]
 order = []
@@ -68,15 +62,14 @@ plot = StabDia(nat_freqs_G, fRF_G,frf_est_G, Freq, order_G, 'Global-RFPM')
 #%%
 #Polymax
 fRF = PolyMaxDataPrep(frf)
-#cOH = [[[1]]] #PolyMaxataPrep(coh)
+cOH = PolyMaxDataPrep(coh)
 Nmin = 0
-Nmax = 20
-#N = [5]
+Nmax = 60
 #OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
-wn_P, dp_P, Order_P = PolyMAX(fRF, freq, min_freq, max_freq, Nmin, Nmax)
+wn_P, dp_P, Order_P = PolyMAX(fRF, freq, cOH, min_freq, max_freq, Nmin, Nmax)
 
 #Plot the stabilization Diagram    
-plot = StabDia(wn_P,FRF, _, Freq, Order_P, 'PolyMAX', 'no')
+plot = StabDia(wn_P,fRF_G, _, Freq, Order_P, 'PolyMAX', 'no')
 
 #%%
 
