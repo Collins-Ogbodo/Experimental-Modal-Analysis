@@ -1,4 +1,4 @@
-def PolyMAX(FRF, Freq, min_freq, max_freq, Nmin, Nmax):
+def PolyMAX(FRF, Freq, Coh, min_freq, max_freq, Nmin, Nmax):
     import numpy as np
     """This function computes the modal parameter of a system 
     using using the PolyMAX method. The FRF input is a 3 dimensional matrix
@@ -12,15 +12,13 @@ def PolyMAX(FRF, Freq, min_freq, max_freq, Nmin, Nmax):
     imin = Freq.index(min_freq)
     imax = Freq.index(max_freq)
     #converting all data to array
-    #Coh = np.array(Coh)
-    FRF = np.array(FRF)
     Freq = np.array(Freq)
     #Frequency, Coh and FRF range
     Freq = Freq[imin:imax]
-    FRF = FRF[:, :, imin:imax]
-    #Coh = Coh[:, :, imin:imax]
+    FRF = FRF[:, imin:imax, :]
+    #Coh = Coh[:, imin:imax, :]
     #Length of frequency-Nf, number of input-m, number of output-l
-    l, m, Nf = np.shape(FRF)
+    m, Nf, l = np.shape(FRF)
     #compute the sample time
     f_0 = min(Freq); f_N = max(Freq)
     #Sampling Time
@@ -30,17 +28,17 @@ def PolyMAX(FRF, Freq, min_freq, max_freq, Nmin, Nmax):
     X = np.zeros([Nf, Nmax+1], dtype=complex)
     Y = np.zeros([Nf, (Nmax+1)*m], dtype=complex)
     #Scalar weighting function
-    W_k = np.array([1/freq_val if freq_val != 0.0 else 0.0 for freq_val in Freq])
-    #W_k = 100 #Coh[ls][ms][i]
+    W_k = 1#np.array([1/freq_val if freq_val != 0.0 else 0.0 for freq_val in Freq])
+    #W_k = 100 #Coh[ms][i][ls]
     #computing X
     for j in range(Nf):
-        x = np.exp(1j * Freq[j] * dt * np.array([range(Nmax+1)])) * W_k[j]
+        x = np.exp(1j * Freq[j] * dt * np.array([range(Nmax+1)])) * W_k#[j]
         X[j,:] = x 
     R_sensor = np.real(np.matmul(np.transpose(X), X))
     #compute M for all output
     for ls in range(l):
         for i in range(Nf):
-            Y[i,:] = -X[i,:] * np.transpose(FRF[ls,:,i])
+            Y[i,:] = -X[i,:] * np.transpose(FRF[:,i,ls])
         T_sensor = np.real(np.matmul(np.transpose(Y), Y))
         S_sensor = np.real(np.matmul(np.transpose(X), Y)) 
         M_sensor = T_sensor - (np.transpose(S_sensor) @ np.linalg.inv(R_sensor) @ S_sensor)
