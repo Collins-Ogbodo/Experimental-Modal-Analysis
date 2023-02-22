@@ -5,6 +5,7 @@ from PolyMAX import PolyMAX
 from PolyMaxData import PolyMaxDataPrep
 from StabilizationDiagram import StabDia
 
+
 #Data Preprocessing
 iters = [1]
 reps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
