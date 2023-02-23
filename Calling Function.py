@@ -14,8 +14,8 @@ frf, freq, coh = DataPrep(iters, reps, test_series)
 
 #Applying OMA 
 N = [i for i in range(0,15)]
-min_freq = 13.5
-max_freq = 21.0
+min_freq = 5.0
+max_freq = 55.0
 #[5.0, 10.3, 13.5, 21.8, 25.52, 30.07, 39.0, 48.0, 55.0]
 #%%
 #RFPM parameters
@@ -63,23 +63,23 @@ plot = StabDia(nat_freqs_G, fRF_G,frf_est_G, Freq, order_G, 'Global-RFPM')
 #Polymax
 fRF = PolyMaxDataPrep(frf,['ULE_06','ULE_07'])
 cOH = PolyMaxDataPrep(coh,['ULE_06','ULE_07'])
-Nmin = 60
-Nmax = 90
+Nmin = 150
+Nmax = 200
 #OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
-wn_P, dp_P, Order_P = PolyMAX(fRF, freq, cOH, min_freq, max_freq, Nmin, Nmax)
+wn_P, dp_P, Order_P, FRF_P, Freq_P = PolyMAX(fRF, freq, cOH, min_freq, max_freq, Nmin, Nmax)
 
 #Plot the stabilization Diagram    
-plot = StabDia(wn_P,fRF_G, _, Freq, Order_P, 'PolyMAX', 'no')
+plot = StabDia(wn_P,FRF_P, _, Freq_P, Order_P, 'PolyMAX', 'no', 'P')
 
 #%%
 
 #Polymax
 fRF = PolyMaxDataPrep(frf,['ULE_06','ULE_07'])
 cOH = PolyMaxDataPrep(coh,['ULE_06','ULE_07'])
-Nmin = 100
-Nmax = 200
+Nmin = 0
+Nmax = 500
 #OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
-wn_P, dp_P, Order_P, FRF_P, Freq_P = PolyMAXFFT(fRF, freq, cOH, min_freq, max_freq, Nmin, Nmax)
+wn_P, dp_P, Order_P, FRF_P, Freq_P, imax, imin = PolyMAXFFT(fRF, freq, cOH, min_freq, max_freq, Nmin, Nmax)
 
 #Plot the stabilization Diagram    
 plot = StabDia(wn_P,FRF_P, _, Freq_P, Order_P, 'PolyMAX', 'no','P')
