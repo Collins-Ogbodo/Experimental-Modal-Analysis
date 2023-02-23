@@ -42,7 +42,6 @@ def PolyMAXFFT(FRF, Freq, Coh, min_freq, max_freq, Nmin, Nmax):
         T_sensor = toeplitz(np.real(T[:,0:Nmax+1,ls]))
         S_sensor = toeplitz(-np.real(np.conjugate(X[0:Nmax+1])), -np.real(Y[:,0:Nmax+1,ls])) 
         R_sensor = toeplitz(np.real(X[0:Nmax+1]))
-        print(S_sensor)
         M_sensor = T_sensor - (np.transpose(S_sensor) @ np.linalg.inv(R_sensor) @ S_sensor)
         M = M + M_sensor 
     M = 2*M
@@ -77,7 +76,7 @@ def PolyMAXFFT(FRF, Freq, Coh, min_freq, max_freq, Nmin, Nmax):
         #order from method
         order_P.append(n)  
         M = M[:-1,:-1]
-    return nat_freqs_P, damp_ratio_P,order_P, FRF, Freq
+    return nat_freqs_P, damp_ratio_P,order_P, FRF, Freq, imax, imin
 
 
 
