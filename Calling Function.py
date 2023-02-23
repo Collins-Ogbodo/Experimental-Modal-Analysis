@@ -14,8 +14,8 @@ frf, freq, coh = DataPrep(iters, reps, test_series)
 
 #Applying OMA 
 N = [i for i in range(0,15)]
-min_freq = 4.0
-max_freq = 10.0
+min_freq = 13.5
+max_freq = 21.0
 #[5.0, 10.3, 13.5, 21.8, 25.52, 30.07, 39.0, 48.0, 55.0]
 #%%
 #RFPM parameters
@@ -61,10 +61,10 @@ plot = StabDia(nat_freqs_G, fRF_G,frf_est_G, Freq, order_G, 'Global-RFPM')
 
 #%%
 #Polymax
-fRF = PolyMaxDataPrep(frf)
-cOH = PolyMaxDataPrep(coh)
-Nmin = 0
-Nmax = 60
+fRF = PolyMaxDataPrep(frf,['ULE_06','ULE_07'])
+cOH = PolyMaxDataPrep(coh,['ULE_06','ULE_07'])
+Nmin = 60
+Nmax = 90
 #OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
 wn_P, dp_P, Order_P = PolyMAX(fRF, freq, cOH, min_freq, max_freq, Nmin, Nmax)
 
@@ -74,10 +74,10 @@ plot = StabDia(wn_P,fRF_G, _, Freq, Order_P, 'PolyMAX', 'no')
 #%%
 
 #Polymax
-fRF = PolyMaxDataPrep(frf)
-cOH = PolyMaxDataPrep(coh)
-Nmin = 50
-Nmax = 120
+fRF = PolyMaxDataPrep(frf,['ULE_06','ULE_07'])
+cOH = PolyMaxDataPrep(coh,['ULE_06','ULE_07'])
+Nmin = 100
+Nmax = 200
 #OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
 wn_P, dp_P, Order_P, FRF_P, Freq_P = PolyMAXFFT(fRF, freq, cOH, min_freq, max_freq, Nmin, Nmax)
 
@@ -85,22 +85,37 @@ wn_P, dp_P, Order_P, FRF_P, Freq_P = PolyMAXFFT(fRF, freq, cOH, min_freq, max_fr
 plot = StabDia(wn_P,FRF_P, _, Freq_P, Order_P, 'PolyMAX', 'no','P')
 #%%
 
-def FreqSeg(FRF, Freq, seg):
+def FreqSeg(FRF, Freq, seg, test_series,start_sensor, end_sensor):
     import matplotlib.pyplot as plt 
-    # Create figure and subplot 
+    import numpy as np
+    import pandas as pd
+    FRF = pd.DataFrame(FRF)
+    # Create figure and subplot
+    imin = Freq.index(0.0)
+    imax = Freq.index(60)
+    #converting all data to array
+    Freq = np.array(Freq)
+    #Frequency, Coh and FRF range
+    Freq = Freq[imin:imax]
+    FRF = FRF.iloc[imin:imax,start_sensor:end_sensor]
+    import numpy as np
     plt.figure(figsize=(17, 8))
     plt.xlim(0,max(Freq))
     plt.grid()  
     plt.xlabel("Frequency[Hz]")
     plt.ylabel("FRF")
-    FRF = [abs(frf) for frf in FRF]
-    plt.semilogy(Freq, FRF, label="FRF")
+    for i in range(np.shape(FRF)[1]):
+        FRFs = [abs(frf) for frf in FRF.iloc[:,i]]
+        plt.semilogy(Freq, FRFs, label = FRF.iloc[:, i].name)
     # multiple segments
-    plt.vlines(seg, ymin=0, ymax=max(FRF), colors='purple', ls='--', lw=2, label='EMA Segments')
-    #plt.axvspan(0.0, seg, alpha=0.5, color='orange')
-    plt.title('Modal Analysis Frequency Segment')
+    plt.vlines(seg, ymin=0, ymax=1, colors='purple', ls='--', lw=2, label='EMA Segments')
+    #for i in range(len(seg)):
+       # plt.text(seg[i],seg[i+1], 'Segment'+str(i),  ha='center', va='bottom' )
+    plt.title('Modal Analysis Frequency Segment-'+ test_series)
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=10)
     plt.show()
     return
 #%%
-plot = FreqSeg(fRF_G, Freq, [5.0, 10.3, 13.5, 21.8, 25.52, 30.07, 39.0, 48.0, 55.0])
+for i in range(0, 59, 2):
+    plot = FreqSeg(frf, freq, [5.0, 10.3, 13.5, 21.8, 25.52, 30.07, 39.0, 48.0, 55.0],test_series,i, i+3)
 
