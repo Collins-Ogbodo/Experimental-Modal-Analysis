@@ -1,4 +1,4 @@
-def PolyMaxDataPrep(data):
+def PolyMaxDataPrep(data, sensors):
     """This function is pecific to the data sent available, it coverts the two dimensional 
     space data (SIMO) which is a dictionary with keys equal to the sensor (output)
     and vales equal to a list of each input across all frequencies to a three dimensional
@@ -9,7 +9,10 @@ def PolyMaxDataPrep(data):
     import numpy as np
     #Converting file to data frame and array
     data = pd.DataFrame(data)
+    #sensor_name = list(data.columns)
     data = data.to_numpy()
+    #sensor_ind = [i for i, x in enumerate(sensor_name) if x in sensors]
+    #data = data[:, sensor_ind]
     #Converting data from 2D [Nf*l] to 3D [m*NF*l]
     data = np.expand_dims(data, axis= 0)
     return data
