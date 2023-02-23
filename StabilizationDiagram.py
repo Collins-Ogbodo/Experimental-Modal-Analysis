@@ -1,5 +1,6 @@
-def StabDia(NatFreq, FRF, FRF_est, Freq, Order, sensor, recon = 'yes'):
+def StabDia(NatFreq, FRF, FRF_est, Freq, Order, sensor, recon = 'yes', algo =''):
     import matplotlib.pyplot as plt 
+    import numpy as np
     # Create figure and subplot
     fig, host = plt.subplots(figsize=(15,10))   
     plt.grid()  
@@ -9,8 +10,14 @@ def StabDia(NatFreq, FRF, FRF_est, Freq, Order, sensor, recon = 'yes'):
     par1.set_ylabel("Model Order")
     par1.set_yticks(Order)
     color1 = plt.cm.viridis(0)
-    FRF = [abs(frf) for frf in FRF]
-    host.semilogy(Freq, FRF, color=color1, label="FRF")
+    if algo =='P':
+        for i in range(np.shape(FRF)[2]):
+            FRFs = [abs(frf) for frf in FRF[0,:,i]]
+            host.semilogy(Freq, FRFs, color=color1, label="FRF")
+    else:
+            FRF = [abs(frf) for frf in FRF]
+            host.semilogy(Freq, FRF, color=color1, label="FRF")
+        
     if recon == 'yes':
         for i, j in zip(FRF_est, Order):
             k = [abs(frf) for frf in i]

@@ -1,4 +1,4 @@
-def PolyMAX(FRF, Freq, Coh, min_freq, max_freq, Nmin, Nmax):
+def PolyMAXFFT(FRF, Freq, Coh, min_freq, max_freq, Nmin, Nmax):
     import numpy as np
     from scipy.linalg import toeplitz
     """This function computes the modal parameter of a system 
@@ -34,13 +34,15 @@ def PolyMAX(FRF, Freq, Coh, min_freq, max_freq, Nmin, Nmax):
     X = np.fft.fftn(np.ones((Nf,1)), s =(2*Nf,), axes=(0,))
     R_sensor = toeplitz(np.real(X))
     #Computation of the FFT of R=[Y'*Y]
-    T = np.fft.fftn(np.abs(FRF)^2, s =(2*Nf,), axes=(1, 2))
+    T = np.fft.fftn(np.abs(FRF)**2, s =(2*Nf,2*Nf), axes=(1, 2))
     #Computing Y
-    Y = np.fft.fftn(FRF, s =(2*Nf,), axes=(1, 2))
+    Y = np.fft.fftn(FRF, s =(2*Nf,2*Nf), axes=(1, 2))
     #compute M for all output
     for ls in range(l):
-        T_sensor = toeplitz(np.real(T[:,:,ls]))
-        S_sensor = toeplitz(-np.real(np.conjugate(X)), -np.real(Y[:,:,ls])) 
+        T_sensor = toeplitz(np.real(T[:,0:Nmax+1,ls]))
+        S_sensor = toeplitz(-np.real(np.conjugate(X[0:Nmax+1])), -np.real(Y[:,0:Nmax+1,ls])) 
+        R_sensor = toeplitz(np.real(X[0:Nmax+1]))
+        print(S_sensor)
         M_sensor = T_sensor - (np.transpose(S_sensor) @ np.linalg.inv(R_sensor) @ S_sensor)
         M = M + M_sensor 
     M = 2*M
@@ -75,7 +77,8 @@ def PolyMAX(FRF, Freq, Coh, min_freq, max_freq, Nmin, Nmax):
         #order from method
         order_P.append(n)  
         M = M[:-1,:-1]
-    return nat_freqs_P, damp_ratio_P,order_P
+    return nat_freqs_P, damp_ratio_P,order_P, FRF, Freq
+
 
 
 
