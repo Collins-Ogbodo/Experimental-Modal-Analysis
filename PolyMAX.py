@@ -75,7 +75,7 @@ def PolyMAX(FRF, Freq, Coh, min_freq, max_freq, Nmin, Nmax):
         #order from method
         order_P.append(n)  
         M = M[:-1,:-1]
-    return nat_freqs_P, damp_ratio_P,order_P
+    return nat_freqs_P, damp_ratio_P,order_P, FRF, Freq
 
 
 
