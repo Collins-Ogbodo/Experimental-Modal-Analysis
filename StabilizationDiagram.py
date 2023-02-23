@@ -13,7 +13,7 @@ def StabDia(NatFreq, FRF, FRF_est, Freq, Order, sensor, recon = 'yes', algo ='')
     if algo =='P':
         for i in range(np.shape(FRF)[2]):
             FRFs = [abs(frf) for frf in FRF[0,:,i]]
-            host.semilogy(Freq, FRFs, color=color1, label="FRF")
+            host.semilogy(Freq, FRFs)
     else:
             FRF = [abs(frf) for frf in FRF]
             host.semilogy(Freq, FRF, color=color1, label="FRF")
