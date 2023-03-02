@@ -29,7 +29,9 @@ def StabDia(NatFreq, FRF, FRF_est, Freq, Order, sensor, recon = 'yes', algo ='')
     host.legend(loc="upper left")
     for w_n, N in zip(NatFreq,Order):
         N= [N for i in range(len(w_n))]
-        par1.plot(w_n, N,"+", markersize=5)
+        #par1.plot(w_n, N,"+", markersize=5)
+        if len(w_n) > 0:
+            plt.vlines(w_n, ymin=0, ymax=1, ls='--', lw=2, label='wn')        
     plt.title(sensor)
     plt.show()
     return fig

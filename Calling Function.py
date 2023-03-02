@@ -13,21 +13,22 @@ test_series = "BR_AR"
 frf, freq, coh = DataPrep(iters, reps, test_series)
 
 #Applying OMA 
-N = [i for i in range(0,15)]
+n_modes = [i for i in range(0,5)]
 min_freq = 5.0
-max_freq = 55.0
+max_freq = 10.0
 #[5.0, 10.3, 13.5, 21.8, 25.52, 30.07, 39.0, 48.0, 55.0]
 #%%
 #RFPM parameters
-sensor_name = 'EXH'
+sensor_name = 'UTC_07'
 nat_freqs =[]
 damp_ratio =[]
 order = []
-frf_est = []
+frf_est = [] 
+num_ord = 2
 #N = [1]
 #OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
-for i in N:
-    wn, dp, Order, FRF, Freq, FRF_est = RFPM(frf, freq, min_freq, max_freq, sensor_name, i)
+for i in n_modes:
+    wn, dp, Order, FRF, Freq, FRF_est = RFPM(frf, freq, min_freq, max_freq, sensor_name, i, num_ord)
     #Natural frequency
     nat_freqs.append(wn)
     #Damping Ratio
@@ -37,7 +38,7 @@ for i in N:
     #Estimated FRF
     frf_est.append(FRF_est)
 #Plot the stabilization Diagram    
-plot = StabDia(nat_freqs, FRF,frf_est, Freq, order, sensor_name)
+plot = StabDia(nat_freqs, FRF,frf_est, Freq, order, sensor_name )
 #%%
 #GRFPM parameters
 nat_freqs_G =[]

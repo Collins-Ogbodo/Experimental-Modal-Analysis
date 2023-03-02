@@ -1,4 +1,4 @@
-def RFPM(FRF, Freq, min_freq, max_freq, sensor, N):
+def RFPM(FRF, Freq, min_freq, max_freq, sensor, n_modes, num_ord):
     import numpy as np
     import itertools
     from scipy import signal
@@ -8,8 +8,10 @@ def RFPM(FRF, Freq, min_freq, max_freq, sensor, N):
     name and values as list of FRF
     Frequency value as list 
     Sensor input must be a the string of the sensor name"""
-    #N - degree of freedom
-    n = 2*N  #number of denominator polynomial terms
+    #Number of coefficient in the Numerator
+    n_n = n_modes * 2 + 1 + num_ord
+    #number of denominator polynomial terms
+    n_d = n_modes * 2 + 1
     #Selecting Sensor
     FRF = FRF[sensor]
     # Find corresponding indices of frequency range
@@ -22,20 +24,20 @@ def RFPM(FRF, Freq, min_freq, max_freq, sensor, N):
     P = []
     for i in Freq:
         new_row = []
-        for k in range(n):
+        for k in range(n_n):
             new_ele= (complex(0,i))**k
             new_row.append(new_ele)
         P.append(new_row)
     T =[]
     for i, j in zip(Freq, FRF):
         new_row = []
-        for k in range(n):
+        for k in range(n_d):
             new_ele= j*(complex(0,i))**k
             new_row.append(new_ele)
         T.append(new_row) 
     W= []
     for i, j in zip(Freq, FRF):
-        new_row= [j*(complex(0,i))**n]
+        new_row= [j*(complex(0,i))**n_d]
         W.append(new_row)
     Y = np.real(np.dot(np.transpose(np.conjugate(P)),P))
     X = -1*np.real(np.dot(np.transpose(np.conjugate(P)),T))
@@ -69,7 +71,7 @@ def RFPM(FRF, Freq, min_freq, max_freq, sensor, N):
     dam_ratio = -np.real(poles) / nat_freq 
     #Create the FRF using the estimated coefficients
     _, FRF_est = signal.freqs(a, b, worN=Freq)
-    return nat_freq, dam_ratio, n, FRF, Freq, FRF_est
+    return nat_freq, dam_ratio, n_d, FRF, Freq, FRF_est
 
 
 
