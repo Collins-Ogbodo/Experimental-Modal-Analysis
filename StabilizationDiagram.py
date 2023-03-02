@@ -1,6 +1,7 @@
 def StabDia(NatFreq, FRF, FRF_est, Freq, Order, sensor, recon = 'yes', algo =''):
     import matplotlib.pyplot as plt 
     import numpy as np
+    import openpyxl
     # Create figure and subplot
     fig, host = plt.subplots(figsize=(15,10))   
     plt.grid()  
@@ -33,5 +34,27 @@ def StabDia(NatFreq, FRF, FRF_est, Freq, Order, sensor, recon = 'yes', algo ='')
         if len(w_n) > 0:
             plt.vlines(w_n, ymin=0, ymax=1, ls='--', lw=2, label='wn')        
     plt.title(sensor)
+    
+    def onclick(event):
+    # Get the x-coordinate of the click
+        x = event.xdata
+        if x is not None:
+            # Round the x-coordinate to the nearest natural frequency
+            nearest_freq = min(w_n, key=lambda f: abs(f-x))
+            print('Selected frequency:', nearest_freq)
+    
+            # Write the selected frequency to an Excel file
+            wb = openpyxl.load_workbook('selected_frequency.xlsx')
+            ws = wb.active
+            # Find the first empty row
+            row = 1
+            while ws.cell(row=row, column=1).value is not None:
+                row += 1
+            # Write the frequency to the next empty row
+            ws.cell(row=row, column=1).value = sensor
+            ws.cell(row=row, column=2).value = nearest_freq
+            wb.save('selected_frequency.xlsx')
+    # Connect the onclick function to the plot
+    cid = fig.canvas.mpl_connect('button_press_event', onclick)
     plt.show()
     return fig
