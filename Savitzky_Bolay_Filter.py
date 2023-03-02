@@ -6,13 +6,21 @@ FRF_filter = pd.DataFrame(frf)
 FRF_filter = FRF_filter.to_numpy()
 
 actual_FRF = FRF_filter
-frf_real = np.real(FRF_filter)
-frf_imag = np.imag(FRF_filter)
-FRF_filter_real = savgol_filter(frf_real, 10, 2, axis = 1, mode="nearest" )
-FRF_filter_imag = savgol_filter(frf_imag, 10, 2, axis = 1, mode="nearest" )
-FRF_filter = FRF_filter_real +1j * FRF_filter_imag
-
-plt.semilogy(freq[0:500],abs(FRF_filter[0:500,1]), label = 'Filtered')
-plt.semilogy(freq[0:500],abs(actual_FRF[0:500,1]), label = 'actual')
-plt.legend()
-plt.show()
+order = [2, 5, 9]
+window = [3, 6, 9]
+for o in order:
+    window = np.array(window)+o
+    for w in window:    
+        FRF_filter = savgol_filter(FRF_filter, w, o, axis = 1, mode="interp" )
+        plt.figure(figsize=(17, 8))
+        plt.xlim(0,max(freq[0:1920]))
+        plt.semilogy(freq[0:1920],abs(FRF_filter[0:1920,1]), label = 'Filtered')
+        plt.semilogy(freq[0:1920],abs(actual_FRF[0:1920,1]), label = 'actual')
+        
+        plt.legend()
+        plt.text(58, 0.006, "Order-"+str(o), horizontalalignment='center',
+         verticalalignment='center')
+        plt.text(58, 0.009, "Window-"+str(w), horizontalalignment='center',
+         verticalalignment='center')
+        plt.title(test_series+"-EXH")
+        plt.show()
