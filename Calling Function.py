@@ -1,3 +1,4 @@
+%reset -f
 from DataPreprocessing import DataPrep
 from Rational_Polynomial_Fraction_Method import RFPM
 from Global_Rational_Polynomial_Fraction_Method import GRFPM
@@ -8,18 +9,19 @@ from StabilizationDiagram import StabDia
 import time
 #Data Preprocessing
 iters = [1]
-reps = [1]
+reps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 test_series = "BR_AR"
 frf, freq, coh = DataPrep(iters, reps, test_series)
 
 #Applying OMA 
-n_modes = [6]
+n_modes = [2]
 min_freq = 5.0
-max_freq = 21.0
+max_freq = 10.0
 #[5.0, 10.3, 13.5, 21.8, 25.52, 30.07, 39.0, 48.0, 55.0]
 #%%
 #RFPM parameters
 sensor = list(frf.keys())
+sensors = ['LLG_01']
 for sensor_name in sensor:
     nat_freqs =[]
     damp_ratio =[]
@@ -39,7 +41,7 @@ for sensor_name in sensor:
         #Estimated FRF
         frf_est.append(FRF_est)
     #Plot the stabilization Diagram    
-    plot = StabDia(nat_freqs, FRF,frf_est, Freq, order, sensor_name )
+    plot = StabDia(nat_freqs, FRF,frf_est, Freq, order, sensor_name, test_series, iters)
     #time.sleep(5)
 #%%
 #GRFPM parameters
@@ -47,7 +49,7 @@ nat_freqs_G =[]
 damp_ratio_G =[]
 order_G = []
 frf_est_G = []
-#N= [16]
+N= [1]
 #OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
 for i in N:
     wn_G, dp_G, Order_G, fRF_G, _, FRF_est_G = GRFPM(frf, freq, min_freq, max_freq, i)
@@ -60,7 +62,7 @@ for i in N:
     #Estimated FRF
     frf_est_G.append(FRF_est_G)
 #Plot the stabilization Diagram    
-plot = StabDia(nat_freqs_G, fRF_G,frf_est_G, Freq, order_G, 'Global-RFPM')
+#plot = StabDia(nat_freqs_G, fRF_G,frf_est_G, Freq, order_G, 'Global-RFPM')
 
 #%%
 #Polymax
@@ -88,7 +90,7 @@ wn_P, dp_P, Order_P, FRF_P, Freq_P, imax, imin = PolyMAXFFT(fRF, freq, cOH, min_
 plot = StabDia(wn_P,FRF_P, _, Freq_P, Order_P, 'PolyMAX', 'no','P')
 #%%
 
-def FreqSeg(FRF, Freq, seg, test_series,start_sensor, end_sensor):
+def FreqSeg(FRF, Freq, seg, test_series,start_sensor, end_sensor, counter):
     import matplotlib.pyplot as plt 
     import numpy as np
     import pandas as pd
@@ -116,9 +118,16 @@ def FreqSeg(FRF, Freq, seg, test_series,start_sensor, end_sensor):
        # plt.text(seg[i],seg[i+1], 'Segment'+str(i),  ha='center', va='bottom' )
     plt.title('Modal Analysis Frequency Segment-'+ test_series)
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=10)
+    plt.savefig('Results\\'+test_series+str(counter)+".png")
     plt.show()
     return
 #%%
+plot = FreqSeg(frf, freq, [7.086238618, 12.76555162	, 15.55088081, 17.10720227, 19.98401053, 22.74799942,	23.90120841,	27.54234413, 31.62898535, 34.9157204, 41.00430037, 43.08228857, 49.50642848, 51.85985068
+],test_series,i, i+3)
+#%%
+counter = 0 
 for i in range(0, 59, 2):
-    plot = FreqSeg(frf, freq, [5.0, 10.3, 13.5, 21.8, 25.52, 30.07, 39.0, 48.0, 55.0],test_series,i, i+3)
+    plot = FreqSeg(frf, freq, [7.086238618, 12.76555162	, 15.55088081, 17.10720227, 19.98401053, 22.74799942,	23.90120841,	27.54234413, 31.62898535, 34.9157204, 41.00430037, 43.08228857, 49.50642848, 51.85985068
+    ],test_series,i, i+3, counter)
+    counter +=1
 
