@@ -1,4 +1,4 @@
-def StabDia(NatFreq, FRF, FRF_est, Freq, Order, sensor, recon = 'yes', algo =''):
+def StabDia(NatFreq, FRF, FRF_est, Freq, Order, sensor, test_series, iters, recon = 'yes', algo ='', ):
     import matplotlib.pyplot as plt 
     import numpy as np
     import openpyxl
@@ -38,6 +38,7 @@ def StabDia(NatFreq, FRF, FRF_est, Freq, Order, sensor, recon = 'yes', algo ='')
     def onclick(event):
     # Get the x-coordinate of the click
         x = event.xdata
+        col = 28
         if x is not None:
             # Round the x-coordinate to the nearest natural frequency
             nearest_freq = min(w_n, key=lambda f: abs(f-x))
@@ -45,14 +46,23 @@ def StabDia(NatFreq, FRF, FRF_est, Freq, Order, sensor, recon = 'yes', algo ='')
     
             # Write the selected frequency to an Excel file
             wb = openpyxl.load_workbook('selected_frequency.xlsx')
-            ws = wb.active
-            # Find the first empty row
-            row = 1
-            while ws.cell(row=row, column=1).value is not None:
-                row += 1
+            sheet_name = test_series+str(iters[0])
+            sheet_names = wb.sheetnames
+            if sheet_name in sheet_names:
+                ws = wb[sheet_name]
+                #ws = wb.active
+                # Find the first empty row
+                row = 1
+                while ws.cell(row=row, column=col).value is not None:
+                    row += 1
+            else:
+                ws = wb.create_sheet(sheet_name)
+                row = 1
+                while ws.cell(row=row, column=col).value is not None:
+                    row += 1
             # Write the frequency to the next empty row
-            ws.cell(row=row, column=1).value = sensor
-            ws.cell(row=row, column=2).value = nearest_freq
+            ws.cell(row=row, column=col-1).value = sensor
+            ws.cell(row=row, column=col).value = nearest_freq
             wb.save('selected_frequency.xlsx')
     # Connect the onclick function to the plot
     cid = fig.canvas.mpl_connect('button_press_event', onclick)
