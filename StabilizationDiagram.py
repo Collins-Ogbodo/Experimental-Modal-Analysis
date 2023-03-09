@@ -1,4 +1,4 @@
-def StabDia(NatFreq, FRF, FRF_est, Freq, Order, sensor, test_series, iters, recon = 'yes', algo ='', ):
+def StabDia(NatFreq, FRF, FRF_est, Freq, Order, sensor, test_series, iters, col, recon = 'yes', algo ='', ):
     import matplotlib.pyplot as plt 
     import numpy as np
     import openpyxl
@@ -38,7 +38,6 @@ def StabDia(NatFreq, FRF, FRF_est, Freq, Order, sensor, test_series, iters, reco
     def onclick(event):
     # Get the x-coordinate of the click
         x = event.xdata
-        col = 28
         if x is not None:
             # Round the x-coordinate to the nearest natural frequency
             nearest_freq = min(w_n, key=lambda f: abs(f-x))

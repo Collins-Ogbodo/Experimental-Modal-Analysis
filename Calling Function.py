@@ -6,32 +6,46 @@ from PolyMAX import PolyMAX
 from PolyMAXFFT import PolyMAXFFT
 from PolyMaxData import PolyMaxDataPrep
 from StabilizationDiagram import StabDia
-import time
 #Data Preprocessing
 iters = [1]
-reps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-test_series = "BR_AR"
+reps = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+test_series = "DS_TLE"
 frf, freq, coh = DataPrep(iters, reps, test_series)
-
 #Applying OMA 
-n_modes = [2]
-min_freq = 5.0
-max_freq = 10.0
-#[5.0, 10.3, 13.5, 21.8, 25.52, 30.07, 39.0, 48.0, 55.0]
 #%%
+# ranges = ((min_freq, max_freq),(n_mode, num_ord))
+# =============================================================================
+# MODE-1 ((5, 13), (6, 1)),
+# MODE-2 ((5, 15), (6,1)),
+# MODE-3 ((15, 22), (5,1)),
+# MODE-4 ((13, 21), (5,1)),
+# MODE-5 ((17, 22.5), (4,1))
+# MODE-6 ((18, 25), (4,1)),
+# MODE-7 ((18, 25), (4,1)),
+# MODE-8 ((25, 39), (5,1)) AND ((26, 39), (5,1))
+# MODE-9 ((25, 39), (5,1))
+# MODE-10 ((25, 39), (5,1))
+# MODE-11 ((39, 43), (3,1))
+# MODE-12 ((42, 47), (3,1)) and ((42, 47), (3,2))
+# MODE-13 ((47, 55), (2,2))
+# MODE-14 ((47, 55), (2,2))
+#[5.0, 10.3, 13.5, 21.8, 25.52, 30.07, 39.0, 48.0, 55.0]
+# =============================================================================
+ranges = (((42, 47), (3, 1)),)
+
 #RFPM parameters
 sensor = list(frf.keys())
-sensors = ['LLG_01']
-for sensor_name in sensor:
-    nat_freqs =[]
-    damp_ratio =[]
-    order = []
-    frf_est = [] 
-    num_ord = 2
-    #N = [1]
-    #OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
-    for i in n_modes:
-        wn, dp, Order, FRF, Freq, FRF_est = RFPM(frf, freq, min_freq, max_freq, sensor_name, i, num_ord)
+col = 0
+sensors = ['UTC_03']
+for min_max_freq, n_mode_num_ord in ranges:
+    col =+ 2
+    for sensor_name in sensor:
+        nat_freqs =[]
+        damp_ratio =[]
+        order = []
+        frf_est = [] 
+        #OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
+        wn, dp, Order, FRF, Freq, FRF_est = RFPM(frf, freq, min_max_freq[0], min_max_freq[1], sensor_name, n_mode_num_ord[0], n_mode_num_ord[1])
         #Natural frequency
         nat_freqs.append(wn)
         #Damping Ratio
@@ -40,9 +54,8 @@ for sensor_name in sensor:
         order.append(Order)
         #Estimated FRF
         frf_est.append(FRF_est)
-    #Plot the stabilization Diagram    
-    plot = StabDia(nat_freqs, FRF,frf_est, Freq, order, sensor_name, test_series, iters)
-    #time.sleep(5)
+        #Plot the stabilization Diagram    
+        plot = StabDia(nat_freqs, FRF,frf_est, Freq, order, sensor_name, test_series, iters, col)
 #%%
 #GRFPM parameters
 nat_freqs_G =[]
