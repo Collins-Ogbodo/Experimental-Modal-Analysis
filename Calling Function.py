@@ -1,4 +1,5 @@
 %reset -f
+#%%
 from DataPreprocessing import DataPrep
 from Rational_Polynomial_Fraction_Method import RFPM
 from Global_Rational_Polynomial_Fraction_Method import GRFPM
@@ -6,55 +7,68 @@ from PolyMAX import PolyMAX
 from PolyMAXFFT import PolyMAXFFT
 from PolyMaxData import PolyMaxDataPrep
 from StabilizationDiagram import StabDia
+from collections import defaultdict
 #Data Preprocessing
-iters = [1]
-reps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+Iter = [1, 2]
+reps = [1]
 test_series = "BR_AR"
-frf, freq, coh = DataPrep(iters, reps, test_series)
-#Applying OMA 
-#%%
-# ranges = ((min_freq, max_freq),(n_mode, num_ord))
-# =============================================================================
-# MODE-1 ((5, 13), (6, 1)),
-# MODE-2 ((5, 15), (6,1)),
-# MODE-3 ((15, 22), (5,1)),
-# MODE-4 ((13, 21), (5,1)),
-# MODE-5 ((17, 22.5), (4,1))
-# MODE-6 ((18, 25), (4,1)),
-# MODE-7 ((18, 25), (4,1)),
-# MODE-8 ((25, 39), (5,1)) AND ((26, 39), (5,1))
-# MODE-9 ((25, 39), (5,1))
-# MODE-10 ((25, 39), (5,1))
-# MODE-11 ((39, 43), (3,1))
-# MODE-12 ((42, 47), (3,1)) and ((42, 47), (3,2))
-# MODE-13 ((47, 55), (2,2))
-# MODE-14 ((47, 55), (2,2))
-#[5.0, 10.3, 13.5, 21.8, 25.52, 30.07, 39.0, 48.0, 55.0]
-# =============================================================================
-ranges = (((5, 13), (6, 1)),)
+output = {}
+BR_AMP_levels = [0.4, 0.8, 1.2, 1.6, 2]
+DS_AMP_levels = [0.4, 1.2, 2, 0.4, 1.2, 2, 0.4, 1.2, 2]
+BR_DMG_levels = [0] * 5
+DS_DMG_levels = [1, 1, 1, 2, 2, 2, 3, 3, 3]
+for iters, AMP_levels, DMG_levels in zip(Iter, BR_AMP_levels, BR_DMG_levels): 
+    
+    frf, freq = DataPrep([iters], reps, test_series)
+    ranges = (
+    ((5, 9), 1),
+    ((12, 14), 1),
+    ((15, 19), 1),
+    ((22, 24), 2),
+    ((26, 30), 1),
+    ((30.5, 31), 1),
+    ((35, 37), 1),
+    ((40.5, 44), 2),
+    ((48.5, 54), 2),
+    ((86, 90), 1),
+    ((92, 100), 1),
+    ((112, 118.5), 1),
+    ((119.5, 122), 1),
+    ((122, 125), 1),
+    ((135, 138), 1),
+    ((154, 162), 1),)
+    num_ord = 6
+    import numpy as np
+    #Experiment Description
 
-#RFPM parameters
-sensor = list(frf.keys())
-sensors = ['UTC_03']
-for min_max_freq, n_mode_num_ord in ranges:
-    print(n_mode_num_ord)
-    for sensor_name in sensor:
-        nat_freqs =[]
-        damp_ratio =[]
-        order = []
-        frf_est = [] 
-        #OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
-        wn, dp, Order, FRF, Freq, FRF_est = RFPM(frf, freq, min_max_freq[0], min_max_freq[1], sensor_name, n_mode_num_ord[0], n_mode_num_ord[1])
-        #Natural frequency
-        nat_freqs.append(wn)
-        #Damping Ratio
-        damp_ratio.append(dp)
-        #order from method
-        order.append(Order)
-        #Estimated FRF
-        frf_est.append(FRF_est)
-        #Plot the stabilization Diagram    
-        plot = StabDia(nat_freqs, FRF,frf_est, Freq, order, sensor_name, test_series, iters)
+    output[test_series+"_"+str(iters)] = {"AMP_level": AMP_levels, "DMG_level": DMG_levels, "Data":[]}
+    #RFPM parameters
+    for (min_freq, max_freq), n_mode in ranges:
+        wns = []
+        wns1 = []
+        for sensor_name in list(frf.keys()):
+            nat_freqs =[]
+            damp_ratio =[] 
+            #RFPM
+            wn,_,_  = RFPM(frf, freq, min_freq, max_freq, sensor_name, n_mode, num_ord)
+            #Natural frequency
+            if n_mode ==2:
+                rounded_numbers = [num//1 for num in wn]
+                num_dict = defaultdict(list)
+                for num in wn:
+                    num_dict[num//1].append(num)
+                modes = sorted(num_dict.values(), key=len, reverse=True)[:n_mode]
+                wns.append(np.mean(modes[0]))
+                wns1.append(np.mean(modes[1]))
+            else:
+                wns.append(np.mean(wn))
+        if n_mode ==2:
+            output[test_series+"_"+str(iters)]["Data"].append(np.mean(wns))
+            output[test_series+"_"+str(iters)]["Data"].append(np.mean(wns1))
+        else:
+            output[test_series+"_"+str(iters)]["Data"].append(np.mean(wns))
+            
+
 #%%
 #GRFPM parameters
 nat_freqs_G =[]
@@ -134,12 +148,10 @@ def FreqSeg(FRF, Freq, seg, test_series,start_sensor, end_sensor, counter):
     plt.show()
     return
 #%%
-plot = FreqSeg(frf, freq, [7.086238618, 12.76555162	, 15.55088081, 17.10720227, 19.98401053, 22.74799942,	23.90120841,	27.54234413, 31.62898535, 34.9157204, 41.00430037, 43.08228857, 49.50642848, 51.85985068
-],test_series,i, i+3)
+plot = FreqSeg(frf, freq, [7.086238618, 12.76555162	, 15.55088081, 17.10720227, 19.98401053, 22.74799942,	23.90120841,	27.54234413, 31.62898535, 34.9157204, 41.00430037, 43.08228857, 49.50642848, 51.85985068],test_series,i, i+3)
 #%%
 counter = 0 
 for i in range(0, 59, 2):
-    plot = FreqSeg(frf, freq, [7.086238618, 12.76555162	, 15.55088081, 17.10720227, 19.98401053, 22.74799942,	23.90120841,	27.54234413, 31.62898535, 34.9157204, 41.00430037, 43.08228857, 49.50642848, 51.85985068
-    ],test_series,i, i+3, counter)
+    plot = FreqSeg(frf, freq, [5, 9, 12, 14, 22, 24, 26, 30, 30.5, 31, 35,37,40.5, 44, 48.5, 54],test_series,i, i+3, counter)
     counter +=1
 

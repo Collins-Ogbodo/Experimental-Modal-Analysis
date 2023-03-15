@@ -49,7 +49,6 @@ def DataPrep(iters, reps, test_series):
                 infile = open(os.path.join(ext_dump_dir,sensor), 'rb')
                 sensor_ = pickle.load(infile)
                 infile.close()
-                
                 all_data = sensor_['data']
                 frf, coh = all_data[-1], all_data[3]
                 
@@ -85,4 +84,4 @@ def DataPrep(iters, reps, test_series):
             sensor_frf_freq_mean[sensor] = frf_freq_average
         # Frequency values for all sensor is same 
         Freq = sensor_frf_freq_mean['EXH']
-    return sensor_frf_mean, Freq, sensor_coh_mean
+    return sensor_frf_mean, Freq

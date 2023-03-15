@@ -1,7 +1,6 @@
+
 def RFPM(FRF, Freq, min_freq, max_freq, sensor, n_modes, num_ord):
     import numpy as np
-    import itertools
-    from scipy import signal
     """This function computes the modal parameter of a system 
     using the Rational Fraction Polynomial Method
     FRF- Response Frequency as a dictionary with keys as sensor 
@@ -9,70 +8,50 @@ def RFPM(FRF, Freq, min_freq, max_freq, sensor, n_modes, num_ord):
     Frequency value as list 
     Sensor input must be a the string of the sensor name"""
     #Number of coefficient in the Numerator
-    n_n = n_modes * 2 + 1 + num_ord
+    m = n_modes * 2 + 1 + num_ord
     #number of denominator polynomial terms
-    n_d = n_modes * 2 + 1
+    n = n_modes * 2 + 1
     #Selecting Sensor
     FRF = FRF[sensor]
     # Find corresponding indices of frequency range
     imin = Freq.index(min_freq)
     imax = Freq.index(max_freq) 
     #Frequency and FRF range
-    Freq = Freq[imin:imax]
-    FRF = FRF[imin:imax]
-    #Generating individual Matrices
-    P = []
-    for i in Freq:
-        new_row = []
-        for k in range(n_n):
-            new_ele= (complex(0,i))**k
-            new_row.append(new_ele)
-        P.append(new_row)
-    T =[]
-    for i, j in zip(Freq, FRF):
-        new_row = []
-        for k in range(n_d):
-            new_ele= j*(complex(0,i))**k
-            new_row.append(new_ele)
-        T.append(new_row) 
-    W= []
-    for i, j in zip(Freq, FRF):
-        new_row= [j*(complex(0,i))**n_d]
-        W.append(new_row)
-    Y = np.real(np.dot(np.transpose(np.conjugate(P)),P))
-    X = -1*np.real(np.dot(np.transpose(np.conjugate(P)),T))
-    Z = np.real(np.dot(np.transpose(np.conjugate(T)),T))
-    G = np.real(np.dot(np.transpose(np.conjugate(P)),W))
-    F = -1*np.real(np.dot(np.transpose(np.conjugate(T)),W))
-    # Concatenation 
-    top_half = np.concatenate((Y, X), axis = 1)
-    but_half = np.concatenate((np.transpose(X), Z), axis = 1)
-    matrix = np.concatenate((top_half, but_half), axis = 0)
-    #comput inverse and find the right side vector
-    vec = np.concatenate((G, F), axis = 0)
-    coeff = np.dot(np.linalg.inv(matrix), vec)
-    #Split coefficient into A and B
-    a, b = np.array_split(coeff, 2)
-    #convert the dimension of a and b to vectors
-    a = list(itertools.chain.from_iterable(a)) 
-    b = list(itertools.chain.from_iterable(b))
-    #Reverse the order of the list to suit the residue function
-    a.reverse(), b.reverse()
-    #insert the coefficient of the variable  of highest power
-    b = [1.0,*b]   
-    # Solve the characteristics equation 
-    poles = np.roots(b)
-    # Picking only poles with stable(negative) poles
-    poles = [pole for pole in poles if np.real(pole) < 0.0 and np.imag(pole) > 0.0 
-             and np.abs(pole) <= max_freq and np.abs(pole) >= min_freq ]
-    # Find the natural frequency and damping factor of the system
-    nat_freq = np.abs(poles)
-    #Computing the Damping Ratio
-    dam_ratio = -np.real(poles) / nat_freq 
-    #Create the FRF using the estimated coefficients
-    _, FRF_est = signal.freqs(a, b, worN=Freq)
-    return nat_freq, dam_ratio, n_d, FRF, Freq, FRF_est
+    w = np.array(Freq[imin:imax])
+    H = np.array(FRF[imin:imax])
+    # Hermitian transpose
+    def HT(a):
+        return a.conj().T
+    # complex frequency vector
+    iw = 1j * w
 
+    # Build monomial basis matricies
+    Phi_a = iw[:, None] ** np.arange(m)
+    Phi_b_all = iw[:, None] ** np.arange(n)
+    Phi_b = Phi_b_all[:, :-1]  # ignore last column because bn=1
 
+    # preallocate some calculations for speed
+    Phi_bH = Phi_b * H[:, None]
+    Hiwn = H * Phi_b_all[:, -1]
+    D = -HT(Phi_a) @ (Phi_bH)
 
+    # form the block matricies
+    M = np.block([[HT(Phi_a) @ Phi_a, D], [D.T, HT(Phi_bH) @ (Phi_bH)]])
+    x = np.block([HT(Phi_a) @ Hiwn, -HT(Phi_bH) @ Hiwn])
+
+    # Solve and extract the coefficients of the polynomials
+    AB = np.linalg.solve(np.real(M), np.real(x))
+    a = AB[:m, None]
+    b = np.append(AB[m:], 1)[:, None]
+
+    # Generate the predicted FRF
+    H_pred = (Phi_a @ a) / (Phi_b_all @ b)
+
+    # Pull out the modal porperties
+    roots_b = sorted(np.roots(np.flip(b[:, 0])))[
+        ::-2
+    ]  # remove every other becaus they are conj pairs
+    wns = np.abs(roots_b)
+    zetas = -np.real(roots_b) / wns
+    return wns, H_pred, zetas
 
