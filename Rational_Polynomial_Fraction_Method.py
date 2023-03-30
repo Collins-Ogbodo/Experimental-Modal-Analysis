@@ -9,9 +9,9 @@ def RFPM(FRF, Freq, min_freq, max_freq, sensor, n_modes, num_ord):
     Frequency value as list 
     Sensor input must be a the string of the sensor name"""
     #Number of coefficient in the Numerator
-    n_n = n_modes * 2 + 1 + num_ord
+    n_n = n_modes * 2 
     #number of denominator polynomial terms
-    n_d = n_modes * 2 + 1
+    n_d = n_modes * 2 
     #Selecting Sensor
     FRF = FRF[sensor]
     # Find corresponding indices of frequency range
