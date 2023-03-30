@@ -1,105 +1,134 @@
 %reset -f
+#%%
 from DataPreprocessing import DataPrep
 from Rational_Polynomial_Fraction_Method import RFPM
-from Global_Rational_Polynomial_Fraction_Method import GRFPM
-from PolyMAX import PolyMAX
-from PolyMAXFFT import PolyMAXFFT
-from PolyMaxData import PolyMaxDataPrep
 from StabilizationDiagram import StabDia
+from collections import defaultdict
+import math
 #Data Preprocessing
-iters = [1]
-reps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-test_series = "BR_AR"
-frf, freq, coh = DataPrep(iters, reps, test_series)
-#Applying OMA 
-#%%
-# ranges = ((min_freq, max_freq),(n_mode, num_ord))
-# =============================================================================
-# MODE-1 ((5, 13), (6, 1)),
-# MODE-2 ((5, 15), (6,1)),
-# MODE-3 ((15, 22), (5,1)),
-# MODE-4 ((13, 21), (5,1)),
-# MODE-5 ((17, 22.5), (4,1))
-# MODE-6 ((18, 25), (4,1)),
-# MODE-7 ((18, 25), (4,1)),
-# MODE-8 ((25, 39), (5,1)) AND ((26, 39), (5,1))
-# MODE-9 ((25, 39), (5,1))
-# MODE-10 ((25, 39), (5,1))
-# MODE-11 ((39, 43), (3,1))
-# MODE-12 ((42, 47), (3,1)) and ((42, 47), (3,2))
-# MODE-13 ((47, 55), (2,2))
-# MODE-14 ((47, 55), (2,2))
-#[5.0, 10.3, 13.5, 21.8, 25.52, 30.07, 39.0, 48.0, 55.0]
-# =============================================================================
-ranges = (((5, 13), (6, 1)),)
-
-#RFPM parameters
-sensor = list(frf.keys())
-sensors = ['UTC_03']
-for min_max_freq, n_mode_num_ord in ranges:
-    print(n_mode_num_ord)
-    for sensor_name in sensor:
-        nat_freqs =[]
-        damp_ratio =[]
-        order = []
-        frf_est = [] 
-        #OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
-        wn, dp, Order, FRF, Freq, FRF_est = RFPM(frf, freq, min_max_freq[0], min_max_freq[1], sensor_name, n_mode_num_ord[0], n_mode_num_ord[1])
-        #Natural frequency
-        nat_freqs.append(wn)
-        #Damping Ratio
-        damp_ratio.append(dp)
-        #order from method
-        order.append(Order)
-        #Estimated FRF
-        frf_est.append(FRF_est)
-        #Plot the stabilization Diagram    
-        plot = StabDia(nat_freqs, FRF,frf_est, Freq, order, sensor_name, test_series, iters)
-#%%
-#GRFPM parameters
-nat_freqs_G =[]
-damp_ratio_G =[]
-order_G = []
-frf_est_G = []
-N= [1]
-#OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
-for i in N:
-    wn_G, dp_G, Order_G, fRF_G, _, FRF_est_G = GRFPM(frf, freq, min_freq, max_freq, i)
-    #Natural frequency
-    nat_freqs_G.append(wn_G)   
-    #Damping Ratio
-    damp_ratio_G.append(dp_G)
-    #order from method
-    order_G.append(Order_G)
-    #Estimated FRF
-    frf_est_G.append(FRF_est_G)
-#Plot the stabilization Diagram    
-#plot = StabDia(nat_freqs_G, fRF_G,frf_est_G, Freq, order_G, 'Global-RFPM')
+Iters = [[1, 2, 3, 4, 5], [1, 2, 3, 4, 5, 6, 7, 8, 9], [10, 11, 12, 13, 14, 15, 16, 17, 18], [19, 20, 21, 22, 23, 24, 25, 26, 27]]
+tests = ["BR_AR", "DS_TLE", "DS_RLE", "DS_CTE"]
+output = {"BR_AR":[], "DS_TLE":[], "DS_RLE":[], "DS_CTE":[]}
+Nat_Freq = []
+AMP_levels = [[0.4, 0.8, 1.2, 1.6, 2], [0.4, 1.2, 2, 0.4, 1.2, 2, 0.4, 1.2, 2], [0.4, 1.2, 2, 0.4, 1.2, 2, 0.4, 1.2, 2], [0.4, 1.2, 2, 0.4, 1.2, 2, 0.4, 1.2, 2]]
+DMG_levels = [[0, 0, 0, 0, 0], [256, 256, 256, 620, 620, 620, 898, 898, 898], [898, 898, 898, 4400, 4400, 4400, 8360, 8360, 8360], [256, 256, 256, 620, 620, 620, 898, 898, 898]]
+for test_series, iters, AMP_level, DMG_level in zip(tests,Iters,AMP_levels,DMG_levels):
+    reps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    iters_iter = iters
+    AMP_level_iter =  AMP_level
+    counter = [i for i in range(len(iters))]
+    DMG_level_iter = DMG_level
+    for iters, amp_levels, dmg_levels, i in zip(iters_iter, AMP_level_iter, DMG_level_iter, counter): 
+        frf, freq,_ = DataPrep([iters], reps, test_series)
+        ranges = (
+         ((35, 37), 1),)
+        num_ord = 1
+        import numpy as np
+        #Experiment Description
+        output[test_series].append({"Exp": test_series+"_"+str(iters), "AMP_level": amp_levels, "DMG_level": dmg_levels, "Wn":[], 'S.D': []})
+        
+        #RFPM parameters
+        for (min_freq, max_freq), n_mode in ranges:
+            wns = []
+            wns1 = []
+            for sensor_name in list(frf.keys()):
+                #RFPM
+                wn,_,_,_,_,_  = RFPM(frf, freq, min_freq, max_freq, sensor_name, n_mode, num_ord)
+                #Natural frequency
+                if n_mode ==2:
+                    rounded_numbers = [num//1 for num in wn]
+                    num_dict = defaultdict(list)
+                    for num in wn:
+                        num_dict[num//1].append(num)
+                    modes = sorted(num_dict.values(), key=len, reverse=True)[:n_mode]
+                    modes = sorted(modes, key=lambda x: x[0])
+                    if len(modes) == 2:
+                        wns.append(np.mean(modes[0]))
+                        wns1.append(np.mean(modes[1]))
+                    else:
+                        wns.append(np.mean(modes[0][0]))
+                        wns1.append(np.mean(modes[0][1]))
+                else:
+                    wns.append(np.mean(wn))
+            if n_mode ==2:
+                wns = list(filter(lambda x: not math.isnan(x), wns))
+                wns1 = list(filter(lambda x: not math.isnan(x), wns1))
+                output[test_series][i]["Wn"].append(round(np.mean(wns),3))
+                output[test_series][i]["Wn"].append(round(np.mean(wns1),3))
+                output[test_series][i]["S.D"].append(np.std(wns)*100,1)
+                output[test_series][i]["S.D"].append(np.std(wns1)*100,1)
+                #print(wns)
+                #print(wns1)
+            else:
+                wns = list(filter(lambda x: not math.isnan(x), wns))
+                output[test_series][i]["Wn"].append(round(np.mean(wns),3))
+                output[test_series][i]["S.D"].append(round(np.std(wns)*100,1))
+                #print(wns)
+        Nat_Freq.append(output[test_series][i]["Wn"])
+        Nat_Freq.append(output[test_series][i]["S.D"])
 
 #%%
-#Polymax
-fRF = PolyMaxDataPrep(frf,['ULE_06','ULE_07'])
-cOH = PolyMaxDataPrep(coh,['ULE_06','ULE_07'])
-Nmin = 150
-Nmax = 200
-#OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
-wn_P, dp_P, Order_P, FRF_P, Freq_P = PolyMAX(fRF, freq, cOH, min_freq, max_freq, Nmin, Nmax)
-
-#Plot the stabilization Diagram    
-plot = StabDia(wn_P,FRF_P, _, Freq_P, Order_P, 'PolyMAX', 'no', 'P')
+# Convert dictionary to LaTeX table format
+for i in output.values():
+    for j in i:
+        latex_table = '\\begin{tabular}{|c|c|c|}\n\\hline\n'
+        latex_table += 'Wn & S.D\\\\\n\\hline\n'
+        for i in range(len(j['Wn'])):
+            latex_table += f"{j['Wn'][i]} & {j['S.D'][i]}\\\\\n"
+        latex_table += '\\hline\n\\end{tabular}'
+        print(latex_table)
 
 #%%
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
 
-#Polymax
-fRF = PolyMaxDataPrep(frf,['ULE_06','ULE_07'])
-cOH = PolyMaxDataPrep(coh,['ULE_06','ULE_07'])
-Nmin = 0
-Nmax = 500
-#OMA for multiple order  nat_freq, dam_ratio, N, FRF, Freq
-wn_P, dp_P, Order_P, FRF_P, Freq_P, imax, imin = PolyMAXFFT(fRF, freq, cOH, min_freq, max_freq, Nmin, Nmax)
+# Assume X is your data matrix
 
-#Plot the stabilization Diagram    
-plot = StabDia(wn_P,FRF_P, _, Freq_P, Order_P, 'PolyMAX', 'no','P')
+pca = PCA()
+pca.fit(np.array(Nat_Freq))
+
+# Plot the scree plot
+plt.figure(figsize=(8, 8))
+plt.plot(range(1, pca.n_components_+1), pca.explained_variance_ratio_, 'ro-')
+plt.title('Scree Plot')
+plt.xlabel('Principal Component')
+plt.ylabel('Explained Variance Ratio')
+plt.show()
+
+# Determine the optimal number of components
+cumulative_variance_ratio = np.cumsum(pca.explained_variance_ratio_)
+num_components = np.argmax(cumulative_variance_ratio >= 0.95) + 1
+
+pca = PCA(n_components=num_components)
+pca.fit(np.array(Nat_Freq))
+wn_pca = pca.transform(np.array(Nat_Freq))
+
+# Create a list of markers that is repeated for each unique value of cat2
+cat1_values = np.unique(sum(AMP_levels, []))
+cat1_markers = ['o', 's', 'D', '^', 'v']  # Customize the marker shapes as needed
+cat1_markers = cat1_markers[:len(sum(AMP_levels, []))] * (len(sum(AMP_levels, [])) // len(cat1_markers) + 1)
+
+
+# Create a list of markers that is repeated for each unique value of cat2
+cat2_values = np.unique(sum(DMG_levels, []))
+cat2_colors = ['red', 'blue', 'green', 'orange', 'purple']  # Customize the marker colors as needed
+cat2_colors = cat2_colors[:len(sum(DMG_levels, []))] * (len(sum(DMG_levels, [])) // len(cat2_colors) + 1)
+
+# Plot the data points with different marker shapes and colors based on cat1 and cat2
+for i in range(32):
+    marker = cat1_markers[i]
+    color = cat2_colors[i]
+    plt.scatter(wn_pca[i, 0], wn_pca[i, 1], marker=marker, color=color)
+
+# Add legend and axis labels
+#plt.legend(handles=[plt.scatter([],[],marker=sum(AMP_levels, [])[i], color=sum(DMG_levels, [])[i], label=sum(AMP_levels, [])[i]) for i in range(32)])
+#plt.legend(handles=[plt.scatter([],[],marker=cat1_dict[cat1_values[i]], color=cat1_color_dict[cat1_values[i]], label=cat1_values[i]) for i in range(len(cat1_values))])
+plt.xlabel('PC1')
+plt.ylabel('PC2')
+plt.title('First Two Principal Components')
+
+# Show the plot
+plt.show()
 #%%
 
 def FreqSeg(FRF, Freq, seg, test_series,start_sensor, end_sensor, counter):
@@ -134,12 +163,8 @@ def FreqSeg(FRF, Freq, seg, test_series,start_sensor, end_sensor, counter):
     plt.show()
     return
 #%%
-plot = FreqSeg(frf, freq, [7.086238618, 12.76555162	, 15.55088081, 17.10720227, 19.98401053, 22.74799942,	23.90120841,	27.54234413, 31.62898535, 34.9157204, 41.00430037, 43.08228857, 49.50642848, 51.85985068
-],test_series,i, i+3)
-#%%
 counter = 0 
 for i in range(0, 59, 2):
-    plot = FreqSeg(frf, freq, [7.086238618, 12.76555162	, 15.55088081, 17.10720227, 19.98401053, 22.74799942,	23.90120841,	27.54234413, 31.62898535, 34.9157204, 41.00430037, 43.08228857, 49.50642848, 51.85985068
-    ],test_series,i, i+3, counter)
+    plot = FreqSeg(frf, freq, [5, 9, 12, 14, 22, 24, 26, 30, 30.5, 31, 35,37,40.5, 44, 48.5, 54],test_series,i, i+3, counter)
     counter +=1
 
