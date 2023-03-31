@@ -4,6 +4,7 @@ from DataPreprocessing import DataPrep
 from Rational_Polynomial_Fraction_Method import RFPM
 from StabilizationDiagram import StabDia
 from collections import defaultdict
+import math
 #Data Preprocessing
 Iters = [[1, 2, 3, 4, 5], [1, 2, 3, 4, 5, 6, 7, 8, 9], [10, 11, 12, 13, 14, 15, 16, 17, 18], [19, 20, 21, 22, 23, 24, 25, 26, 27]]
 tests = ["BR_AR", "DS_TLE", "DS_RLE", "DS_CTE"]
@@ -20,26 +21,21 @@ for test_series, iters, AMP_level, DMG_level in zip(tests,Iters,AMP_levels,DMG_l
     for iters, amp_levels, dmg_levels, i in zip(iters_iter, AMP_level_iter, DMG_level_iter, counter): 
         frf, freq = DataPrep([iters], reps, test_series)
         ranges = (
-        ((5, 9), 1),
-        ((12, 14), 1),
-        ((15, 19), 1),
-        ((22, 24), 2),
-        ((26, 30), 1),
-        ((30.5, 31), 1),
-        ((35, 37), 1),
-        ((40.5, 44), 2),
-        ((48.5, 54), 2),
-        ((86, 90), 1),
-        ((92, 100), 1),
-        ((112, 118.5), 1),
-        ((119.5, 122), 1),
-        ((122, 125), 1),
-        ((135, 138), 1),
-        ((154, 162), 1),)
+    ((5, 9), 1),
+    ((12, 14), 1),
+    ((16, 16.5), 1),
+    ((15, 19), 1),
+    ((18, 22), 1),
+    ((22, 24), 2),
+    ((26, 30), 1),
+    ((30.5, 31), 1),
+    ((35, 37), 1),
+    ((40.5, 44), 2),
+    ((48.5, 54), 2),)
         num_ord = 6
         import numpy as np
         #Experiment Description
-        output[test_series].append({"Exp": test_series+"_"+str(iters), "AMP_level": amp_levels, "DMG_level": dmg_levels, "Wn":[]})
+        output[test_series].append({"Exp": test_series+"_"+str(iters), "AMP_level": amp_levels, "DMG_level": dmg_levels, "Wn":[], 'S.D': []})
         
         #RFPM parameters
         for (min_freq, max_freq), n_mode in ranges:
@@ -65,15 +61,32 @@ for test_series, iters, AMP_level, DMG_level in zip(tests,Iters,AMP_levels,DMG_l
                 else:
                     wns.append(np.mean(wn))
             if n_mode ==2:
-                output[test_series][i]["Wn"].append(np.mean(wns))
-                output[test_series][i]["Wn"].append(np.mean(wns1))
-                
+                wns = list(filter(lambda x: not math.isnan(x), wns))
+                wns1 = list(filter(lambda x: not math.isnan(x), wns1))
+                output[test_series][i]["Wn"].append(round(np.mean(wns),3))
+                output[test_series][i]["Wn"].append(round(np.mean(wns1),3))
+                output[test_series][i]["S.D"].append(round(np.std(wns)*100,1))
+                output[test_series][i]["S.D"].append(round(np.std(wns1)*100,1))
+                #print(wns)
+                #print(wns1)
             else:
-                output[test_series][i]["Wn"].append(np.mean(wns))
-        Nat_Freq.append(output[test_series][i]["Wn"])    
-
+                wns = list(filter(lambda x: not math.isnan(x), wns))
+                output[test_series][i]["Wn"].append(round(np.mean(wns),3))
+                output[test_series][i]["S.D"].append(round(np.std(wns)*100,1))
+                #print(wns)
+        Nat_Freq.append(output[test_series][i]["Wn"])
+        Nat_Freq.append(output[test_series][i]["S.D"])
 #%%
-
+# Convert dictionary to LaTeX table format
+for i in output.values():
+    for j in i:
+        latex_table = '\\begin{tabular}{|c|c|c|}\n\\hline\n'
+        latex_table += 'Wn & S.D\\\\\n\\hline\n'
+        for i in range(len(j['Wn'])):
+            latex_table += f"{j['Wn'][i]} & {j['S.D'][i]}\\\\\n"
+        latex_table += '\\hline\n\\end{tabular}'
+        print(latex_table)
+#%%
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
