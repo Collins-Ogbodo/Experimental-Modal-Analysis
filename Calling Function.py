@@ -77,6 +77,21 @@ for test_series, iters, AMP_level, DMG_level in zip(tests,Iters,AMP_levels,DMG_l
         Nat_Freq.append(output[test_series][i]["Wn"])
         Nat_Freq.append(output[test_series][i]["S.D"])
 #%%
+
+for ts in output.keys():
+    
+    for i in range(len(output[ts])):
+        if ts == "DS_RLE" or ts== "DS_CTE":
+            iters = [int(output[ts][i]["Exp"][-2:])]
+        else:
+            iters = [int(output[ts][i]["Exp"][-1:])]
+        reps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        frf, freq = DataPrep(iters, reps, ts)
+        frf_array = np.array(list(frf.values()))
+        frf_mean = np.mean(frf_array, axis = 0)
+        plot = FreqSeg(frf_mean, freq, output[ts][i]["Wn"], output[ts][i]["Exp"])
+
+#%%
 # Convert dictionary to LaTeX table format
 for i in output.values():
     for j in i:
@@ -139,11 +154,10 @@ plt.title('First Two Principal Components')
 plt.show()
 #%%
 
-def FreqSeg(FRF, Freq, seg, test_series,start_sensor, end_sensor, counter):
+def FreqSeg(FRF, Freq, seg, test_series):
     import matplotlib.pyplot as plt 
     import numpy as np
     import pandas as pd
-    FRF = pd.DataFrame(FRF)
     # Create figure and subplot
     imin = Freq.index(0.0)
     imax = Freq.index(60)
@@ -151,23 +165,22 @@ def FreqSeg(FRF, Freq, seg, test_series,start_sensor, end_sensor, counter):
     Freq = np.array(Freq)
     #Frequency, Coh and FRF range
     Freq = Freq[imin:imax]
-    FRF = FRF.iloc[imin:imax,start_sensor:end_sensor]
+    FRF = FRF[imin:imax]
     import numpy as np
     plt.figure(figsize=(17, 8))
     plt.xlim(0,max(Freq))
     plt.grid()  
     plt.xlabel("Frequency[Hz]")
     plt.ylabel("FRF")
-    for i in range(np.shape(FRF)[1]):
-        FRFs = [abs(frf) for frf in FRF.iloc[:,i]]
-        plt.semilogy(Freq, FRFs, label = FRF.iloc[:, i].name)
+    FRFs = [abs(frf) for frf in FRF]
+    plt.semilogy(Freq, FRFs,color = 'orange', label = "Actual FRF")
     # multiple segments
-    plt.vlines(seg, ymin=0, ymax=1, colors='purple', ls='--', lw=2, label='EMA Segments')
+    plt.vlines(seg, ymin=0, ymax=1,colors='purple', ls='--', lw=2, label='Estimate Natural Frequency')
     #for i in range(len(seg)):
        # plt.text(seg[i],seg[i+1], 'Segment'+str(i),  ha='center', va='bottom' )
-    plt.title('Modal Analysis Frequency Segment-'+ test_series)
+    #plt.title('Modal Analysis RF-'+ test_series)
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=10)
-    plt.savefig('Results\\'+test_series+str(counter)+".png")
+    plt.savefig('Results\\RFPM\\Out-of-band Estimate\\'+test_series+".png")
     plt.show()
     return
 #%%
