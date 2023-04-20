@@ -71,7 +71,8 @@ def RFPM(FRF, Freq, min_freq, max_freq, sensor, n_modes):
     dam_ratio = -np.real(poles) / nat_freq 
     #Create the FRF using the estimated coefficients
     _, FRF_est = signal.freqs(a, b, worN=Freq)
-    return nat_freq, dam_ratio, n_d, FRF, Freq, FRF_est
+    res_err = sum(abs(np.array(FRF)- FRF_est))
+    return nat_freq, dam_ratio, n_d, FRF, Freq, FRF_est, res_err
 
 
 
