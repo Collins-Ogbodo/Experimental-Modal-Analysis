@@ -11,7 +11,7 @@ reps = [1,2,3,4,5,6,7,8,9,10]
 test_series = "DS_CTE"
 frf, freq, coh = DataPrep(iters, reps, test_series)
 # Generate noisy data
-min_freq, max_freq = 5, 60
+min_freq, max_freq = 5, 235
 FRF_df = pd.DataFrame(frf)
 FRF_df_abs = abs(FRF_df)
 imin = freq.index(min_freq)
@@ -44,44 +44,15 @@ plt.plot(peaks,  y_smooth[peaks], "x")
 plt.vlines( x=peaks, ymin=contour_heights, ymax= y_smooth[peaks])
 plt.show()
 Id_peaks = [x[i] for i in peaks]
-output = {}
-incr =freq[1]
-WNs = []
 
-for i in Id_peaks:
-    label = 'Mode'+str(Id_peaks.index(i)+1)
-    label1 = 'STD-Mode'+str(Id_peaks.index(i)+1)
-    output[label] = []
-    output[label1] = []
-    Wn = []
-    for sensor_name in list(frf.keys()):
-        freq_ini = [0, i]
-        mmin_freq = i - incr
-        mmax_freq = i + incr
-        errors = {}
-        
-        for j in range(1,150):
-            wn,_,_,_,_,_,error  = RFPM(frf, freq, mmin_freq, mmax_freq, sensor_name, n_modes=6)
-            wn = np.mean(wn)
-            if np.isnan(wn):
-                wn = 0
-            errors[str(wn)]=error
-            mmin_freq-= incr
-            mmax_freq+= incr
-        best_wn = list(errors.keys())[list(errors.values()).index(min(errors.values()))]
-        Wn.append(float(best_wn))
-    output[label].append(np.mean(Wn))
-    WNs.append(np.mean(Wn))
-    output[label1].append(np.std(Wn))
-
-def FreqSeg(FRF, Freq, seg, test_series):
+def FreqSeg(FRF, Freq, seg, test_series, min_freq, max_freq):
     import matplotlib.pyplot as plt 
     import numpy as np
     import pandas as pd
     FRF = np.mean(np.array(list(FRF.values())), axis=(0))
     # Create figure and subplot
-    imin = Freq.index(0.0)
-    imax = Freq.index(60)
+    imin = Freq.index(min_freq)
+    imax = Freq.index(max_freq)
     #converting all data to array
     Freq = np.array(Freq)
     #Frequency, Coh and FRF range
@@ -104,5 +75,40 @@ def FreqSeg(FRF, Freq, seg, test_series):
     #plt.savefig('Results\\RFPM\\Out-of-band Estimate\\'+test_series+".png")
     plt.show()
     return
-plot_est = FreqSeg(frf, freq,WNs,test_series)
+#%%
+output = {}
+incr =freq[1]
+WNs = []
+
+for i in Id_peaks:
+    label = 'Mode'+str(Id_peaks.index(i)+1)
+    label1 = 'STD-Mode'+str(Id_peaks.index(i)+1)
+    output[label] = []
+    output[label1] = []
+    Wn = []
+    for sensor_name in list(frf.keys()):
+        errors_o ={}
+        for k in range(5,20):
+            freq_ini = [0, i]
+            mmin_freq = i - incr
+            mmax_freq = i + incr
+            errors = {}
+            for j in range(1,150):
+                wn,_,_,_,_,_,error  = RFPM(frf, freq, mmin_freq, mmax_freq, sensor_name, n_modes=k)
+                wn = np.mean(wn)
+                if np.isnan(wn):
+                    wn = 0
+                errors[str(wn)]=error
+                mmin_freq-= incr
+                mmax_freq+= incr
+            min_error = min(errors.values())
+            best_wn = list(errors.keys())[list(errors.values()).index(min_error)]
+            errors_o[min_error] = float(best_wn)
+        best_wn_o = errors_o[min(errors_o.keys())]
+        Wn.append(float(best_wn_o))
+    output[label].append(np.mean(Wn))
+    WNs.append(np.mean(Wn))
+    output[label1].append(np.std(Wn))
+
+plot_est = FreqSeg(frf, freq,WNs,test_series,  min_freq, max_freq)
 
