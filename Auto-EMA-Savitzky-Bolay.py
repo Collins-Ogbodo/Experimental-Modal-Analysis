@@ -2,12 +2,11 @@ from DataPreprocessing import DataPrep
 from Rational_Polynomial_Fraction_Method import RFPM
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
 from scipy.signal import savgol_filter
 #Data Preprocessing
 iters = [27]
-reps = [1,2,3,4,5,6,7,8,9,10]
+reps = [1]
 test_series = "DS_CTE"
 frf, freq, coh = DataPrep(iters, reps, test_series)
 # Generate noisy data
@@ -34,16 +33,31 @@ plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=10)
 plt.show()
 
 from scipy.signal import find_peaks, peak_prominences
-peaks, _ = find_peaks(y_smooth, prominence=(1e-04))
+peaks, _ = find_peaks(y_smooth, prominence=(0))
 prominences = peak_prominences(y_smooth, peaks)[0]
 contour_heights = y_smooth[peaks] - prominences
-plt.figure(figsize=(17, 8))
-plt.grid() 
-plt.plot( y_smooth)
-plt.plot(peaks,  y_smooth[peaks], "x")
-plt.vlines( x=peaks, ymin=contour_heights, ymax= y_smooth[peaks])
+# Define onclick function
+def onclick(event, peak):
+    # Get the x-coordinate of the click
+    p = event.xdata
+    if p is not None:
+        # Find the index of the closest point in the data array
+        idx = (np.abs(p - peaks)).argmin()
+        # Add the x-coordinate and y-value to the peak list
+        peak.append(peaks[idx])
+        print("Selected peak:", peaks[idx])
+ 
+     
+fig, ax = plt.subplots(figsize=(17, 8))
+ax.grid() 
+ax.plot( y_smooth)
+ax.plot(peaks,  y_smooth[peaks], "x")
+ax.vlines( x=peaks, ymin=contour_heights, ymax= y_smooth[peaks])
+# Create list to hold selected peaks
+Id_peaks = []
+# Connect onclick function to plot
+cid = fig.canvas.mpl_connect('button_press_event', lambda event: onclick(event, Id_peaks))
 plt.show()
-Id_peaks = [x[i] for i in peaks]
 
 def FreqSeg(FRF, Freq, seg, test_series, min_freq, max_freq):
     import matplotlib.pyplot as plt 
