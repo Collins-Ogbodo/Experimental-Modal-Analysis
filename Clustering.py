@@ -26,5 +26,7 @@ label = kmeans.labels_
 wcss = kmeans.inertia_
     
 #%%
-
+# Plot the scree plot
+plt.figure(figsize=(8, 8))
+plt.grid()
 plt.scatter(FRF_df.iloc[:,50],FRF_df.iloc[:,2], c= kmeans.labels_)
