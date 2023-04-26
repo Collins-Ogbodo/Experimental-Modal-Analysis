@@ -21,7 +21,12 @@ for test_series, iters, AMP_level, DMG_level in zip(tests,Iters,AMP_levels,DMG_l
     for iters, amp_levels, dmg_levels, i in zip(iters_iter, AMP_level_iter, DMG_level_iter, counter): 
         frf, freq,_ = DataPrep([iters], reps, test_series)
         ranges = (
-         ((35, 37), 1),)
+          ((22, 23), 1),
+          ((23, 24), 1),
+          ((40.5, 42), 1),
+          ((42, 44), 1),
+          ((48.5, 50.5), 1),
+          ((51, 54), 1),)
         num_ord = 1
         import numpy as np
         #Experiment Description
@@ -72,9 +77,9 @@ for test_series, iters, AMP_level, DMG_level in zip(tests,Iters,AMP_levels,DMG_l
 for i in output.values():
     for j in i:
         latex_table = '\\begin{tabular}{|c|c|c|}\n\\hline\n'
-        latex_table += 'Wn & S.D\\\\\n\\hline\n'
+        latex_table += 'S.D &Wn \\\\\n\\hline\n'
         for i in range(len(j['Wn'])):
-            latex_table += f"{j['Wn'][i]} & {j['S.D'][i]}\\\\\n"
+            latex_table += f"{j['S.D'][i]} & {j['Wn'][i]} \\\\\n"
         latex_table += '\\hline\n\\end{tabular}'
         print(latex_table)
 
@@ -165,6 +170,9 @@ def FreqSeg(FRF, Freq, seg, test_series,start_sensor, end_sensor, counter):
 #%%
 counter = 0 
 for i in range(0, 59, 2):
-    plot = FreqSeg(frf, freq, [5, 9, 12, 14, 22, 24, 26, 30, 30.5, 31, 35,37,40.5, 44, 48.5, 54],test_series,i, i+3, counter)
+    plot = FreqSeg(frf, freq, [22, 24,40.5, 44, 48.5, 54],test_series,i, i+3, counter)
     counter +=1
+
+
+
 
