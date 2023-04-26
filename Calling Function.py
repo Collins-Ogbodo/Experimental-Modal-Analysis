@@ -21,8 +21,16 @@ for test_series, iters, AMP_level, DMG_level in zip(tests,Iters,AMP_levels,DMG_l
     for iters, amp_levels, dmg_levels, i in zip(iters_iter, AMP_level_iter, DMG_level_iter, counter): 
         frf, freq,_ = DataPrep([iters], reps, test_series)
         ranges = (
+          ((5, 9), 1),
+          ((12, 14), 1),
+          ((16, 16.5), 1),
+          ((15, 19), 1),
+          ((18, 22), 1),
           ((22, 23), 1),
           ((23, 24), 1),
+          ((26, 30), 1),
+          ((30.5, 31), 1),
+          ((35, 37), 1),
           ((40.5, 42), 1),
           ((42, 44), 1),
           ((48.5, 50.5), 1),
@@ -72,6 +80,18 @@ for test_series, iters, AMP_level, DMG_level in zip(tests,Iters,AMP_levels,DMG_l
         Nat_Freq.append(output[test_series][i]["Wn"])
         Nat_Freq.append(output[test_series][i]["S.D"])
 
+for ts in output.keys():
+    
+    for i in range(len(output[ts])):
+        if ts == "DS_RLE" or ts== "DS_CTE":
+            iters = [int(output[ts][i]["Exp"][-2:])]
+        else:
+            iters = [int(output[ts][i]["Exp"][-1:])]
+        reps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        frf, freq = DataPrep(iters, reps, ts)
+        frf_array = np.array(list(frf.values()))
+        frf_mean = np.mean(frf_array, axis = 0)
+        plot = FreqSeg(frf_mean, freq, output[ts][i]["Wn"], output[ts][i]["Exp"])
 #%%
 # Convert dictionary to LaTeX table format
 for i in output.values():
