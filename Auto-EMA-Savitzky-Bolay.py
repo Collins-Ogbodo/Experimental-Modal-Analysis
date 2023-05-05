@@ -10,7 +10,7 @@ reps = [1]
 test_series = "DS_CTE"
 frf, freq, coh = DataPrep(iters, reps, test_series)
 # Generate noisy data
-min_freq, max_freq = 5, 235
+min_freq, max_freq = 5, 60
 FRF_df = pd.DataFrame(frf)
 FRF_df_abs = abs(FRF_df)
 imin = freq.index(min_freq)
@@ -33,36 +33,60 @@ plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=10)
 plt.show()
 
 from scipy.signal import find_peaks, peak_prominences
-peaks, _ = find_peaks(y_smooth, prominence=(0))
-prominences = peak_prominences(y_smooth, peaks)[0]
-contour_heights = y_smooth[peaks] - prominences
+peaks_all, _ = find_peaks(y_smooth, prominence=(0))
+prominences_all = peak_prominences(y_smooth, peaks_all)[0]
+contour_heights_all = y_smooth[peaks_all] - prominences_all
+plt.figure(figsize=(17, 8))
+plt.grid() 
+plt.title("All Identified Peaks")
+plt.plot( y_smooth)
+plt.plot(peaks_all,  y_smooth[peaks_all], "x")
+plt.vlines( x=peaks_all, ymin=contour_heights_all, ymax= y_smooth[peaks_all])
+plt.show()
+
+peaks_auto, _ = find_peaks(y_smooth, prominence=(1e-04))
+prominences_auto = peak_prominences(y_smooth, peaks_auto)[0]
+contour_heights_auto = y_smooth[peaks_auto] - prominences_auto
+plt.figure(figsize=(20, 8))
+plt.grid() 
+plt.title("Auto-Selected Peaks")
+plt.plot( y_smooth)
+plt.plot(peaks_auto,  y_smooth[peaks_auto], "x")
+plt.vlines( x=peaks_auto, ymin=contour_heights_auto, ymax= y_smooth[peaks_auto])
+plt.show()
+
+peaks_add, _ = find_peaks(y_smooth, prominence=(0))
+prominences_add = peak_prominences(y_smooth, peaks_add)[0]
+contour_heights_add = y_smooth[peaks_add] - prominences_add
 # Define onclick function
 def onclick(event, peak):
     # Get the x-coordinate of the click
     p = event.xdata
     if p is not None:
         # Find the index of the closest point in the data array
-        idx = (np.abs(p - peaks)).argmin()
+        idx = (np.abs(p - peaks_add)).argmin()
+        print(idx)
         # Add the x-coordinate and y-value to the peak list
-        peak.append(peaks[idx])
-        print("Selected peak:", peaks[idx])
+        peak.append(peaks_add[idx])
+        print("Selected peak:", peaks_add[idx])
  
      
 fig, ax = plt.subplots(figsize=(17, 8))
 ax.grid() 
 ax.plot( y_smooth)
-ax.plot(peaks,  y_smooth[peaks], "x")
-ax.vlines( x=peaks, ymin=contour_heights, ymax= y_smooth[peaks])
+plt.title("Select New Peaks Here")
+ax.plot(peaks_add,  y_smooth[peaks_add], "x")
+ax.vlines( x=peaks_add, ymin=contour_heights_add, ymax= y_smooth[peaks_add])
 # Create list to hold selected peaks
-Id_peaks = []
+Id_peaks_add = []
 # Connect onclick function to plot
-cid = fig.canvas.mpl_connect('button_press_event', lambda event: onclick(event, Id_peaks))
+cid = fig.canvas.mpl_connect('button_press_event', lambda event: onclick(event, Id_peaks_add))
 plt.show()
+
 
 def FreqSeg(FRF, Freq, seg, test_series, min_freq, max_freq):
     import matplotlib.pyplot as plt 
     import numpy as np
-    import pandas as pd
     FRF = np.mean(np.array(list(FRF.values())), axis=(0))
     # Create figure and subplot
     imin = Freq.index(min_freq)
@@ -89,6 +113,18 @@ def FreqSeg(FRF, Freq, seg, test_series, min_freq, max_freq):
     #plt.savefig('Results\\RFPM\\Out-of-band Estimate\\'+test_series+".png")
     plt.show()
     return
+#%%
+f_peaks = np.unique(list(peaks_auto) + list(Id_peaks_add))
+Id_peaks = [ x[i] for i in f_peaks]
+prominences = peak_prominences(y_smooth, f_peaks)[0]
+contour_heights = y_smooth[f_peaks] - prominences
+plt.figure(figsize=(17, 8))
+plt.title("Final Peaks Idenfied")
+plt.grid()
+plt.plot( y_smooth)
+plt.plot(f_peaks,  y_smooth[f_peaks], "x")
+plt.vlines( x=f_peaks, ymin=contour_heights, ymax= y_smooth[f_peaks])
+plt.show()
 #%%
 output = {}
 incr =freq[1]
