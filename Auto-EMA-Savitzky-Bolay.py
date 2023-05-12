@@ -6,11 +6,11 @@ import numpy as np
 from scipy.signal import savgol_filter
 #Data Preprocessing
 iters = [27]
-reps = [1]
+reps = [1, 2, 3, 4, 5 ,6 ,7 ,8 ,9, 10]
 test_series = "DS_CTE"
 frf, freq, coh = DataPrep(iters, reps, test_series)
 # Generate noisy data
-min_freq, max_freq = 5, 60
+min_freq, max_freq = 60,235
 FRF_df = pd.DataFrame(frf)
 FRF_df_abs = abs(FRF_df)
 imin = freq.index(min_freq)
@@ -107,7 +107,7 @@ def FreqSeg(FRF, Freq, seg, test_series, min_freq, max_freq):
     # multiple segments
     plt.vlines(seg, ymin=0, ymax=1,colors='purple', ls='--', lw=2, label='Estimate Natural Frequency')
     #for i in range(len(seg)):
-       # plt.text(seg[i],seg[i+1], 'Segment'+str(i),  ha='center', va='bottom' )
+    #plt.text(seg[i],seg[i+1], 'Segment'+str(i),  ha='center', va='bottom')
     #plt.title('Modal Analysis RF-'+ test_series)
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=10)
     #plt.savefig('Results\\RFPM\\Out-of-band Estimate\\'+test_series+".png")
@@ -138,12 +138,12 @@ for i in Id_peaks:
     Wn = []
     for sensor_name in list(frf.keys()):
         errors_o ={}
-        for k in range(5,20):
+        for k in range(6,20):
             freq_ini = [0, i]
             mmin_freq = i - incr
             mmax_freq = i + incr
             errors = {}
-            for j in range(1,150):
+            for j in range(10,120):
                 wn,_,_,_,_,_,error  = RFPM(frf, freq, mmin_freq, mmax_freq, sensor_name, n_modes=k)
                 wn = np.mean(wn)
                 if np.isnan(wn):
